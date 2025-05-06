@@ -37,12 +37,16 @@
     "windowsPath": "tools/scripts-win"
   },
   "dependencies": {
+    "@apollo/server": "^4.12.0",
+    "@nestjs/apollo": "^12.2.2",
     "@nestjs/common": "^10.0.2",
     "@nestjs/config": "^4.0.1",
     "@nestjs/core": "^10.0.2",
+    "@nestjs/graphql": "^12.2.2",
     "@nestjs/platform-express": "^10.0.2",
     "@nestjs/typeorm": "^11.0.0",
     "axios": "^1.6.0",
+    "graphql": "^16.11.0",
     "pg": "^8.13.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
