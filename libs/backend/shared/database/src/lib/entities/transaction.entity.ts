@@ -1,5 +1,6 @@
-import { Entity, Column, Check } from 'typeorm';
+import { Entity, Column, Check, OneToMany } from 'typeorm';
 import { BaseEntity } from './base-entity';
+import { Alert } from './alert.entity';
 
 export enum TransactionTypeEnum {
   CREDIT = 'CREDIT',
@@ -10,18 +11,18 @@ export enum TransactionTypeEnum {
 @Entity()
 @Check('amount > 0')
 export class Transaction extends BaseEntity {
-  @Column({ 
-    name: 'external_id', 
-    unique: true, 
+  @Column({
+    name: 'external_id',
+    unique: true,
     nullable: false,
-    comment: 'Unique ID in the customer system, recommend using uuid'
+    comment: 'Unique ID in the customer system, recommend using uuid',
   })
   externalId: string;
 
-  @Column({ 
-    type: 'timestamptz', 
+  @Column({
+    type: 'timestamptz',
     nullable: false,
-    comment: 'Date of the transaction in customer system'
+    comment: 'Date of the transaction in customer system',
   })
   date: Date;
 
@@ -40,7 +41,7 @@ export class Transaction extends BaseEntity {
   @Column({
     type: 'enum',
     enum: TransactionTypeEnum,
-    nullable: false
+    nullable: false,
   })
   type: TransactionTypeEnum;
 
@@ -49,4 +50,7 @@ export class Transaction extends BaseEntity {
 
   @Column({ type: 'timestamptz', nullable: true })
   processedAt: Date;
+
+  @OneToMany(() => Alert, (alert) => alert.transaction)
+  alerts: Alert[];
 }

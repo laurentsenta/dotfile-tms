@@ -1,17 +1,32 @@
 import { Test } from '@nestjs/testing';
 import { AppService } from './app.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
+import { Transaction, TransactionTypeEnum, Rule, Alert } from '@dotfile-tms/database';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 
 describe('AppService', () => {
   let service: AppService;
-  let mockRepository: any;
+  let mockTransactionRepository: any;
+  let mockRuleRepository: any;
+  let mockAlertRepository: any;
 
   beforeEach(async () => {
-    mockRepository = {
+    mockTransactionRepository = {
       find: jest.fn().mockResolvedValue([]),
       save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'test-id', ...entity })),
+      findOne: jest.fn().mockResolvedValue(null),
+    };
+
+    mockRuleRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn().mockResolvedValue(null),
+      save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'rule-id', ...entity })),
+    };
+
+    mockAlertRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn().mockResolvedValue(null),
+      save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
     };
 
     const app = await Test.createTestingModule({
@@ -19,7 +34,15 @@ describe('AppService', () => {
         AppService,
         {
           provide: getRepositoryToken(Transaction),
-          useValue: mockRepository,
+          useValue: mockTransactionRepository,
+        },
+        {
+          provide: getRepositoryToken(Rule),
+          useValue: mockRuleRepository,
+        },
+        {
+          provide: getRepositoryToken(Alert),
+          useValue: mockAlertRepository,
         },
       ],
     }).compile();
@@ -30,10 +53,10 @@ describe('AppService', () => {
   describe('listAllTransactions', () => {
     it('should return an array of transactions', async () => {
       const transactions = [{ id: '1', externalId: 'ext-1' }];
-      mockRepository.find.mockResolvedValue(transactions);
+      mockTransactionRepository.find.mockResolvedValue(transactions);
       
       expect(await service.listAllTransactions()).toBe(transactions);
-      expect(mockRepository.find).toHaveBeenCalled();
+      expect(mockTransactionRepository.find).toHaveBeenCalled();
     });
   });
 
@@ -55,7 +78,7 @@ describe('AppService', () => {
       expect(result).toHaveProperty('id', 'test-id');
       expect(result).toHaveProperty('externalId', createTransactionDto.external_id);
       expect(result).toHaveProperty('processedAt');
-      expect(mockRepository.save).toHaveBeenCalled();
+      expect(mockTransactionRepository.save).toHaveBeenCalled();
     });
   });
 });

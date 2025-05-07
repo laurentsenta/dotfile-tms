@@ -26,3 +26,4 @@ Logging a few tasks, as finding the idioms and patterns in nestjs would prevent 
 - [ ] In the e2e tests, import the type from the DTO somehow instead of duplicating it
 - [ ] Setup tooling to use camelCase in typescript and snake_case in db and IOs (use class-transforms?)
 - [ ] Setup a way to spin up a test db during e2e tests to avoid using the dev db
+- [ ] Code deduplication in the unit tests (app.controller.spec.ts, etc)

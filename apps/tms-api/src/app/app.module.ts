@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController, TransactionsController } from './app.controller';
+import { AppController, TransactionsController, RulesController, AlertsController } from './app.controller';
 import { AppService } from './app.service';
-import { Transaction } from '@dotfile-tms/database';
+import { RuleEvaluatorService } from './services/rule-evaluator.service';
+import { Transaction, Rule, Alert } from '@dotfile-tms/database';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Transaction]),
+    TypeOrmModule.forFeature([Transaction, Rule, Alert]),
   ],
-  controllers: [AppController, TransactionsController],
-  providers: [AppService],
+  controllers: [AppController, TransactionsController, RulesController, AlertsController],
+  providers: [AppService, RuleEvaluatorService],
 })
 export class AppModule {}

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController, TransactionsController } from './app.controller';
 import { AppService } from './app.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Transaction } from '@dotfile-tms/database';
+import { Transaction, Rule, Alert } from '@dotfile-tms/database';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -18,6 +18,23 @@ describe('AppController', () => {
           useValue: {
             find: jest.fn().mockResolvedValue([]),
             save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'test-id', ...entity })),
+            findOne: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: getRepositoryToken(Rule),
+          useValue: {
+            find: jest.fn().mockResolvedValue([]),
+            findOne: jest.fn().mockResolvedValue(null),
+            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'rule-id', ...entity })),
+          },
+        },
+        {
+          provide: getRepositoryToken(Alert),
+          useValue: {
+            find: jest.fn().mockResolvedValue([]),
+            findOne: jest.fn().mockResolvedValue(null),
+            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
           },
         },
       ],
@@ -48,6 +65,23 @@ describe('TransactionsController', () => {
           useValue: {
             find: jest.fn().mockResolvedValue([]),
             save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'test-id', ...entity })),
+            findOne: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: getRepositoryToken(Rule),
+          useValue: {
+            find: jest.fn().mockResolvedValue([]),
+            findOne: jest.fn().mockResolvedValue(null),
+            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'rule-id', ...entity })),
+          },
+        },
+        {
+          provide: getRepositoryToken(Alert),
+          useValue: {
+            find: jest.fn().mockResolvedValue([]),
+            findOne: jest.fn().mockResolvedValue(null),
+            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
           },
         },
       ],

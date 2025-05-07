@@ -1,16 +1,21 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Transaction } from '@dotfile-tms/database';
+import { Transaction, Rule, Alert, AlertStatusEnum } from '@dotfile-tms/database';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 
 const UNIQUE_CONSTRAINT_VIOLATION_CODE = '23505';
+const DEFAULT_RULE_ID = 'suspicious_activity';
 
 @Injectable()
 export class AppService {
   constructor(
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
+    @InjectRepository(Rule)
+    private ruleRepository: Repository<Rule>,
+    @InjectRepository(Alert)
+    private alertRepository: Repository<Alert>,
   ) {}
 
   async listAllTransactions(): Promise<Transaction[]> {
@@ -32,12 +37,10 @@ export class AppService {
     // Process the transaction (in a real implementation, this would involve rule engine processing)
     // For now, we just set the processed_at field
     transaction.processedAt = new Date();
-    
+
     try {
-      // Try to save the transaction
       return await this.transactionRepository.save(transaction);
     } catch (error) {
-      // Check if the error is a unique constraint violation on external_id
       if (
         error.code === UNIQUE_CONSTRAINT_VIOLATION_CODE &&
         error.detail?.includes('external_id')
@@ -54,5 +57,47 @@ export class AppService {
       
       throw error;
     }
+  }
+
+
+  async listAllAlerts(): Promise<Alert[]> {
+    return this.alertRepository.find({ relations: ['rule'] });
+  }
+
+  async getAlertsByTransactionId(transactionId: string): Promise<Alert[]> {
+    return this.alertRepository.find({
+      where: { 
+        transaction: { id: transactionId } 
+      },
+      relations: ['rule', 'transaction']
+    });
+  }
+
+  private async createAlertForTransaction(transactionId: string): Promise<Alert> {
+    // Get the default rule
+    const rule = await this.ruleRepository.findOne({ 
+      where: { name: DEFAULT_RULE_ID } 
+    });
+    
+    if (!rule) {
+      throw new NotFoundException(`Default rule '${DEFAULT_RULE_ID}' not found`);
+    }
+    
+    // Get the transaction
+    const transaction = await this.transactionRepository.findOne({
+      where: { id: transactionId }
+    });
+    
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ID ${transactionId} not found`);
+    }
+    
+    // Create an alert
+    const alert = new Alert();
+    alert.rule = rule;
+    alert.transaction = transaction;
+    alert.status = AlertStatusEnum.NEW;
+    
+    return this.alertRepository.save(alert);
   }
 }
