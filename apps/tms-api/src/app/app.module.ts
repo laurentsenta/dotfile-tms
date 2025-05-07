@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController, TransactionsController } from './app.controller';
 import { AppService } from './app.service';
+import { Transaction } from '@dotfile-tms/database';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
+  imports: [
+    TypeOrmModule.forFeature([Transaction]),
+  ],
+  controllers: [AppController, TransactionsController],
   providers: [AppService],
 })
 export class AppModule {}
