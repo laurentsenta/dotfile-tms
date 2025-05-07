@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction, Rule, Alert, AlertStatusEnum } from '@dotfile-tms/database';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { RuleEvaluatorService } from './services/rule-evaluator.service';
 
 const UNIQUE_CONSTRAINT_VIOLATION_CODE = '23505';
 const DEFAULT_RULE_ID = 'suspicious_activity';
@@ -16,6 +17,7 @@ export class AppService {
     private ruleRepository: Repository<Rule>,
     @InjectRepository(Alert)
     private alertRepository: Repository<Alert>,
+    private ruleEvaluatorService: RuleEvaluatorService,
   ) {}
 
   async listAllTransactions(): Promise<Transaction[]> {
@@ -34,12 +36,22 @@ export class AppService {
     transaction.type = createTransactionDto.type;
     transaction.metadata = createTransactionDto.metadata;
     
-    // Process the transaction (in a real implementation, this would involve rule engine processing)
-    // For now, we just set the processed_at field
     transaction.processedAt = new Date();
 
     try {
-      return await this.transactionRepository.save(transaction);
+      const savedTransaction = await this.transactionRepository.save(transaction);
+      
+      const evalResult = this.ruleEvaluatorService.inspect(savedTransaction);
+      
+      // If suspicious, create an alert
+      if (evalResult.isSuspicious) {
+        await this.createAlertForTransaction(
+          savedTransaction.id, 
+          evalResult.reason
+        );
+      }
+      
+      return savedTransaction;
     } catch (error) {
       if (
         error.code === UNIQUE_CONSTRAINT_VIOLATION_CODE &&
@@ -73,7 +85,10 @@ export class AppService {
     });
   }
 
-  private async createAlertForTransaction(transactionId: string): Promise<Alert> {
+  private async createAlertForTransaction(
+    transactionId: string, 
+    reason?: string
+  ): Promise<Alert> {
     // Get the default rule
     const rule = await this.ruleRepository.findOne({ 
       where: { name: DEFAULT_RULE_ID } 
@@ -97,6 +112,10 @@ export class AppService {
     alert.rule = rule;
     alert.transaction = transaction;
     alert.status = AlertStatusEnum.NEW;
+    
+    if (reason) {
+      alert.metadata = { reason };
+    }
     
     return this.alertRepository.save(alert);
   }

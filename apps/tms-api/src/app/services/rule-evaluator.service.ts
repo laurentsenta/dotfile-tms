@@ -1,8 +1,9 @@
 import { Injectable, OnModuleInit, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Rule } from '@dotfile-tms/database';
+import { Rule, Transaction } from '@dotfile-tms/database';
 import { CreateRuleDto } from '../dto/create-rule.dto';
+import { suspiciousActivity, EvalResult } from '../rules/suspiciousActivity';
 
 const DEFAULT_RULE_ID = 'suspicious_activity';
 
@@ -34,6 +35,16 @@ export class RuleEvaluatorService implements OnModuleInit {
     rule.name = createRuleDto.name;
     
     return this.ruleRepository.save(rule);
+  }
+
+  /**
+   * Inspects a transaction for suspicious activity
+   * @param transaction The transaction to inspect
+   * @returns An EvalResult indicating if the transaction is suspicious
+   */
+  inspect(transaction: Transaction): EvalResult {
+    // For now, we only have one rule to check
+    return suspiciousActivity(transaction);
   }
 
   private async createDefaultRuleIfNotExists(): Promise<void> {

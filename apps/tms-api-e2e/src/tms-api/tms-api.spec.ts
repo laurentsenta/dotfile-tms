@@ -180,10 +180,13 @@ describe('Transaction API', () => {
     // Step 4: Check that the "processed_at" field is set for the suspicious transaction
     expect(gotTx2.processedAt).toBeDefined();
 
-    // Step 5: Check that no alerts were created for the suspicious transaction
+    // Step 5: Check that an alert was created for the suspicious transaction
     const alertsRes2 = await axios.get(`/api/v1/alerts/transaction/${createRes2.data.id}`);
-    // expect(alertsRes2.status).toBe(200);
-    // expect(Array.isArray(alertsRes2.data)).toBe(true);
-    // expect(alertsRes2.data.length).toBe(1);
+    expect(alertsRes2.status).toBe(200);
+    expect(Array.isArray(alertsRes2.data)).toBe(true);
+    expect(alertsRes2.data.length).toBe(1);
+    expect(alertsRes2.data[0].rule.name).toBe('suspicious_activity');
+    expect(alertsRes2.data[0].metadata).toHaveProperty('reason');
+    expect(alertsRes2.data[0].metadata.reason).toContain('exceeds threshold');
   });
 });

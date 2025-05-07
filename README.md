@@ -21,6 +21,15 @@ nx serve tms-app # start & serve App
 
 ## Tasks
 
+### Architecture
+
+Logging a few tasks, as I'm "spiking" through nestjs for now to get the scalable architecture down before refactoring to patterns.
+
+- [ ] APIs are Leaky for now - rethink the rule evaluator vs app controller.
+  - [ ] This will break unit-tests and let me clean them up as well. They are mostly cline-generated for now, not very good, but let me 'overspec' to refactor later.
+
+### Idioms
+
 Logging a few tasks, as finding the idioms and patterns in nestjs would prevent me from focusing on the system'ic part of the project.
 
 - [ ] In the e2e tests, import the type from the DTO somehow instead of duplicating it

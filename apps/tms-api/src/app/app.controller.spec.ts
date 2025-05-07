@@ -3,6 +3,7 @@ import { AppController, TransactionsController } from './app.controller';
 import { AppService } from './app.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
+import { RuleEvaluatorService } from './services/rule-evaluator.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -35,6 +36,16 @@ describe('AppController', () => {
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue(null),
             save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
+          },
+        },
+        {
+          provide: RuleEvaluatorService,
+          useValue: {
+            inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
+            listAllRules: jest.fn().mockResolvedValue([]),
+            getRuleByName: jest.fn().mockResolvedValue({}),
+            createRule: jest.fn().mockResolvedValue({}),
+            onModuleInit: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -82,6 +93,16 @@ describe('TransactionsController', () => {
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue(null),
             save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
+          },
+        },
+        {
+          provide: RuleEvaluatorService,
+          useValue: {
+            inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
+            listAllRules: jest.fn().mockResolvedValue([]),
+            getRuleByName: jest.fn().mockResolvedValue({}),
+            createRule: jest.fn().mockResolvedValue({}),
+            onModuleInit: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
