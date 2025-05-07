@@ -9,6 +9,14 @@ import { ApiModule } from './api.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiModule);
+  
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: '*',
+    credentials: true,
+  });
+
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   const port = process.env.PORT || 3000;

@@ -37,6 +37,7 @@
     "windowsPath": "tools/scripts-win"
   },
   "dependencies": {
+    "@apollo/client": "^3.13.8",
     "@apollo/server": "^4.12.0",
     "@nestjs/apollo": "^12.2.2",
     "@nestjs/common": "^10.0.2",

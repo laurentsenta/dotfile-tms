@@ -32,6 +32,8 @@ Logging a few tasks, as I'm "spiking" through nestjs for now to get the scalable
 
 Logging a few tasks, as finding the idioms and patterns in nestjs would prevent me from focusing on the system'ic part of the project.
 
+- [ ] Move the server's URL to an external config in the frontend
+- [ ] Remove overly permissive CORS settings and dig into the traefik config
 - [ ] In the e2e tests, import the type from the DTO somehow instead of duplicating it
 - [ ] Setup tooling to use camelCase in typescript and snake_case in db and IOs (use class-transforms?)
 - [ ] Setup a way to spin up a test db during e2e tests to avoid using the dev db
