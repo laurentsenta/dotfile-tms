@@ -18,7 +18,7 @@ INFRA = traefik \
         portainer \
         postgres \
         redis \
-				redis-webui
+		redis-webui
 endif
 
 
