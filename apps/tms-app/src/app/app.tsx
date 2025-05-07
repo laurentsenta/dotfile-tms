@@ -1,34 +1,10 @@
-import { useQuery, gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
+import { Text } from '@chakra-ui/react';
 import Layout from '../components/layout/Layout';
+import TransactionForm from '../components/transactions/TransactionForm';
 import TransactionTable from '../components/transactions/TransactionTable';
-import { Box, Heading, Text } from '@chakra-ui/react';
+import { Toaster } from '../components/ui/toaster';
 
-// Define types for our data
-interface Rule {
-  id: string;
-  name: string;
-}
-
-interface Alert {
-  id: string;
-  status: string;
-  rule: Rule;
-}
-
-interface Transaction {
-  id: string;
-  externalId: string;
-  date: string;
-  amount: number;
-  currency: string;
-  type: string;
-  sourceAccountKey?: string;
-  targetAccountKey?: string;
-  processedAt?: string;
-  alerts?: Alert[];
-}
-
-// GraphQL query to fetch transactions
 const GET_TRANSACTIONS = gql`
   query GetTransactions {
     transactions {
@@ -54,11 +30,12 @@ const GET_TRANSACTIONS = gql`
 `;
 
 export function App() {
-  // Execute the query
-  const { loading, error, data } = useQuery(GET_TRANSACTIONS);
+  const { loading, error, data, refetch } = useQuery(GET_TRANSACTIONS);
 
   return (
     <Layout>
+      <TransactionForm onTransactionCreated={() => refetch()} />
+
       {error ? (
         <Text color="red.500">Error: {error.message}</Text>
       ) : (
@@ -67,6 +44,7 @@ export function App() {
           isLoading={loading}
         />
       )}
+      <Toaster />
     </Layout>
   );
 }
