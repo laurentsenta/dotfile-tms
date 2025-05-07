@@ -1,9 +1,19 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Transaction, Rule, Alert, AlertStatusEnum } from '@dotfile-tms/database';
+import {
+  Transaction,
+  Rule,
+  Alert,
+  AlertStatusEnum,
+} from '@dotfile-tms/database';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
+import { TransactionQueueService } from '../rules/transaction-queue.service';
 
 const UNIQUE_CONSTRAINT_VIOLATION_CODE = '23505';
 const DEFAULT_RULE_ID = 'suspicious_activity';
@@ -18,13 +28,16 @@ export class AppService {
     @InjectRepository(Alert)
     private alertRepository: Repository<Alert>,
     private ruleEvaluatorService: RuleEvaluatorService,
+    private txQueueService: TransactionQueueService
   ) {}
 
   async listAllTransactions(): Promise<Transaction[]> {
     return this.transactionRepository.find();
   }
 
-  async createTransaction(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
+  async createTransaction(
+    createTransactionDto: CreateTransactionDto
+  ): Promise<Transaction> {
     // Map DTO to entity
     const transaction = new Transaction();
     transaction.externalId = createTransactionDto.external_id;
@@ -35,22 +48,27 @@ export class AppService {
     transaction.currency = createTransactionDto.currency;
     transaction.type = createTransactionDto.type;
     transaction.metadata = createTransactionDto.metadata;
-    
+
     transaction.processedAt = new Date();
 
     try {
-      const savedTransaction = await this.transactionRepository.save(transaction);
-      
+      const savedTransaction = await this.transactionRepository.save(
+        transaction
+      );
+
+      // TODO: we have an issue here, we might miss transaction if the process dies between the save and notify.
+      this.txQueueService.notifyTransactionCreated({ id: savedTransaction.id });
+
       const evalResult = this.ruleEvaluatorService.inspect(savedTransaction);
-      
+
       // If suspicious, create an alert
       if (evalResult.isSuspicious) {
         await this.createAlertForTransaction(
-          savedTransaction.id, 
+          savedTransaction.id,
           evalResult.reason
         );
       }
-      
+
       return savedTransaction;
     } catch (error) {
       if (
@@ -66,11 +84,10 @@ export class AppService {
           `Transaction with the same unique constraint already exists`
         );
       }
-      
+
       throw error;
     }
   }
-
 
   async listAllAlerts(): Promise<Alert[]> {
     return this.alertRepository.find({ relations: ['rule'] });
@@ -78,45 +95,49 @@ export class AppService {
 
   async getAlertsByTransactionId(transactionId: string): Promise<Alert[]> {
     return this.alertRepository.find({
-      where: { 
-        transaction: { id: transactionId } 
+      where: {
+        transaction: { id: transactionId },
       },
-      relations: ['rule', 'transaction']
+      relations: ['rule', 'transaction'],
     });
   }
 
   private async createAlertForTransaction(
-    transactionId: string, 
+    transactionId: string,
     reason?: string
   ): Promise<Alert> {
     // Get the default rule
-    const rule = await this.ruleRepository.findOne({ 
-      where: { name: DEFAULT_RULE_ID } 
+    const rule = await this.ruleRepository.findOne({
+      where: { name: DEFAULT_RULE_ID },
     });
-    
+
     if (!rule) {
-      throw new NotFoundException(`Default rule '${DEFAULT_RULE_ID}' not found`);
+      throw new NotFoundException(
+        `Default rule '${DEFAULT_RULE_ID}' not found`
+      );
     }
-    
+
     // Get the transaction
     const transaction = await this.transactionRepository.findOne({
-      where: { id: transactionId }
+      where: { id: transactionId },
     });
-    
+
     if (!transaction) {
-      throw new NotFoundException(`Transaction with ID ${transactionId} not found`);
+      throw new NotFoundException(
+        `Transaction with ID ${transactionId} not found`
+      );
     }
-    
+
     // Create an alert
     const alert = new Alert();
     alert.rule = rule;
     alert.transaction = transaction;
     alert.status = AlertStatusEnum.NEW;
-    
+
     if (reason) {
       alert.metadata = { reason };
     }
-    
+
     return this.alertRepository.save(alert);
   }
 }

@@ -7,6 +7,7 @@ import { AppService } from '../app.service';
 import { RuleEvaluatorService } from '../services/rule-evaluator.service';
 import { AlertResolver } from './resolvers/alert.resolver';
 import { TransactionResolver } from './resolvers/transaction.resolver';
+import { RulesWorkerModule } from '../../rules/rules-worker.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TransactionResolver } from './resolvers/transaction.resolver';
       sortSchema: true,
     }),
     TypeOrmModule.forFeature([Transaction, Rule, Alert]),
+    RulesWorkerModule,
   ],
   providers: [
     TransactionResolver,
