@@ -1,8 +1,10 @@
-import { Resolver, Query, Args, ResolveField, Parent, ID } from '@nestjs/graphql';
+import { Resolver, Query, Args, ResolveField, Parent, ID, Mutation } from '@nestjs/graphql';
 import { TransactionType } from '../types/transaction.type';
 import { AlertType } from '../types/alert.type';
 import { AppService } from '../../app.service';
 import { Transaction } from '@dotfile-tms/database';
+import { CreateTransactionInput } from '../types/create-transaction.input';
+import { CreateTransactionDto } from '../../dto/create-transaction.dto';
 
 @Resolver(() => TransactionType)
 export class TransactionResolver {
@@ -21,6 +23,22 @@ export class TransactionResolver {
     } catch (error) {
       return null;
     }
+  }
+
+  @Mutation(() => TransactionType)
+  async createTransaction(@Args('input') input: CreateTransactionInput): Promise<Transaction> {
+    // Map GraphQL input to DTO
+    const createTransactionDto: CreateTransactionDto = {
+      external_id: input.externalId,
+      date: input.date,
+      source_account_key: input.sourceAccountKey,
+      target_account_key: input.targetAccountKey,
+      amount: input.amount,
+      currency: input.currency,
+      type: input.type,
+    };
+
+    return this.appService.createTransaction(createTransactionDto);
   }
 
   @ResolveField('alerts', () => [AlertType])

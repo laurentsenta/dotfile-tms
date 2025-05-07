@@ -220,4 +220,48 @@ describe('GraphQL API', () => {
     expect(alert.transaction.id).toBe(suspiciousTx.id);
     expect(alert.transaction.externalId).toBe('graphql-test-suspicious');
   });
+
+  it('should create a transaction using GraphQL mutation', async () => {
+    // Create a transaction using GraphQL mutation
+    const mutation = `
+      mutation($input: CreateTransactionInput!) {
+        createTransaction(input: $input) {
+          id
+          externalId
+          date
+          sourceAccountKey
+          targetAccountKey
+          amount
+          currency
+          type
+          processedAt
+        }
+      }
+    `;
+
+    const variables = {
+      input: {
+        externalId: 'graphql-mutation-test',
+        date: new Date().toISOString(),
+        sourceAccountKey: 'source_account',
+        targetAccountKey: 'target_account',
+        amount: 200 * CENTS,
+        currency: 'USD',
+        type: 'TRANSFER'
+      }
+    };
+
+    const response = await executeGraphQLQuery<{ createTransaction: TransactionData }>(mutation, variables);
+
+    // Verify the response
+    expect(response.errors).toBeUndefined();
+    expect(response.data).toBeDefined();
+    expect(response.data.createTransaction).toBeDefined();
+    expect(response.data.createTransaction.id).toBeDefined();
+    expect(response.data.createTransaction.externalId).toBe('graphql-mutation-test');
+    expect(response.data.createTransaction.amount).toBe(200 * CENTS);
+    expect(response.data.createTransaction.currency).toBe('USD');
+    expect(response.data.createTransaction.type).toBe('TRANSFER');
+    expect(response.data.createTransaction.processedAt).toBeDefined();
+  });
 });
