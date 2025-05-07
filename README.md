@@ -36,3 +36,7 @@ Logging a few tasks, as finding the idioms and patterns in nestjs would prevent 
 - [ ] Setup tooling to use camelCase in typescript and snake_case in db and IOs (use class-transforms?)
 - [ ] Setup a way to spin up a test db during e2e tests to avoid using the dev db
 - [ ] Code deduplication in the unit tests (app.controller.spec.ts, etc)
+- [ ] Exposing the metadata fields in the graphql schema -- we'd need to discuss the possible values and implement the resolvers for them. Likely a map key => number, string, date.
+- [ ] Move around the types correctly (see graphql e2e tests, and most other tests)
+  - Related: https://docs.nestjs.com/graphql/sharing-models
+  - Realted: https://www.apollographql.com/docs/react/development-testing/static-typing

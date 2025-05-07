@@ -4,10 +4,12 @@ import { AppController, TransactionsController, RulesController, AlertsControlle
 import { AppService } from './app.service';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
+import { GraphqlModule } from './graphql/graphql.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transaction, Rule, Alert]),
+    GraphqlModule,
   ],
   controllers: [AppController, TransactionsController, RulesController, AlertsController],
   providers: [AppService, RuleEvaluatorService],
