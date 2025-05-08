@@ -2,7 +2,7 @@ import { Rule, Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
+import { MockAccountHistory } from '../../data/accounthistory.mock';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
@@ -19,11 +19,11 @@ jest.mock('../../domain/rules-evaluator');
 describe('RuleEvaluatorService', () => {
   let service: RuleEvaluatorService;
   let ruleRepository: Repository<Rule>;
-  let accountHistoryService: InMemoryAccountHistory;
+  let accountHistoryService: MockAccountHistory;
   let riskAccountsService: MockRiskAccounts;
 
   beforeEach(async () => {
-    accountHistoryService = new InMemoryAccountHistory();
+    accountHistoryService = new MockAccountHistory();
     riskAccountsService = new MockRiskAccounts(['risk-account-1', 'risk-account-2']);
 
     const module: TestingModule = await Test.createTestingModule({

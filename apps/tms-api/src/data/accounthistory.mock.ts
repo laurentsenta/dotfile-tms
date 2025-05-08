@@ -3,7 +3,7 @@ import { AccountHistory } from "./accounthistory.entity";
 /**
  * In-memory implementation of AccountHistory for testing
  */
-export class InMemoryAccountHistory implements AccountHistory {
+export class MockAccountHistory implements AccountHistory {
   private storage: Map<string, number> = new Map();
   private dateStorage: Map<string, string> = new Map();
   private dormantFlags: Map<string, boolean> = new Map();

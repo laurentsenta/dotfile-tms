@@ -1,11 +1,11 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
-import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
+import { MockAccountHistory } from '../../data/accounthistory.mock';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { highRiskMerchants } from './high-risk-merchants';
 
 describe('highRiskMerchants', () => {
   let riskAccounts: MockRiskAccounts;
-  let history: InMemoryAccountHistory;
+  let history: MockAccountHistory;
 
   beforeEach(() => {
     riskAccounts = new MockRiskAccounts([
@@ -13,7 +13,7 @@ describe('highRiskMerchants', () => {
       'merchant-crypto-exchange-001',
       'merchant-offshore-001',
     ]);
-    history = new InMemoryAccountHistory();
+    history = new MockAccountHistory();
   });
 
   it('should return isSuspicious=true when target account is a high-risk merchant', async () => {

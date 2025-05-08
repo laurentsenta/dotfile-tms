@@ -1,10 +1,10 @@
 import { Transaction } from '@dotfile-tms/database';
-import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
+import { MockAccountHistory } from '../../data/accounthistory.mock';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { dormantAccountActivity } from './dormant-account-activity';
 
 describe('dormantAccountActivity', () => {
-  let history: InMemoryAccountHistory;
+  let history: MockAccountHistory;
   let riskAccounts: MockRiskAccounts;
   let transaction: Transaction;
 
@@ -13,7 +13,7 @@ describe('dormantAccountActivity', () => {
   const currentDate = new Date('2023-01-15T12:00:00Z');
 
   beforeEach(() => {
-    history = new InMemoryAccountHistory();
+    history = new MockAccountHistory();
     riskAccounts = new MockRiskAccounts();
 
     transaction = {

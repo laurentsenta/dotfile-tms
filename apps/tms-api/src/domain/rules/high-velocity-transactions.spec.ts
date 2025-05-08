@@ -1,14 +1,14 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
-import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
+import { MockAccountHistory } from '../../data/accounthistory.mock';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { highVelocityTransactions } from './high-velocity-transactions';
 
 describe('highVelocityTransactions', () => {
-  let history: InMemoryAccountHistory;
+  let history: MockAccountHistory;
   let riskAccounts: MockRiskAccounts;
 
   beforeEach(() => {
-    history = new InMemoryAccountHistory();
+    history = new MockAccountHistory();
     riskAccounts = new MockRiskAccounts();
   });
 
