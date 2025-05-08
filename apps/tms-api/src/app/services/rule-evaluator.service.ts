@@ -6,6 +6,10 @@ import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
 import { RuleEvalResult } from '../../data/rule-eval-result.entity';
 import {
+  DORMANT_ACCOUNT_ACTIVITY_RULE_ID,
+  dormantAccountActivity,
+} from '../../domain/rules/dormant-account-activity';
+import {
   HIGH_RISK_MERCHANTS_RULE_ID,
   highRiskMerchants,
 } from '../../domain/rules/high-risk-merchants';
@@ -20,6 +24,7 @@ export const DEFAULT_RULE_IDS = [
   SUSPICIOUS_ACTIVITY_RULE_ID,
   HIGH_VELOCITY_RULE_ID,
   HIGH_RISK_MERCHANTS_RULE_ID,
+  DORMANT_ACCOUNT_ACTIVITY_RULE_ID,
 ];
 
 @Injectable()
@@ -82,6 +87,13 @@ export class RuleEvaluatorService implements OnModuleInit {
       this.riskAccountsService
     );
     results.push(highRiskMerchantsResult);
+
+    // Check dormant account activity rule
+    const dormantAccountResult = await dormantAccountActivity(
+      transaction,
+      this.accountHistoryService
+    );
+    results.push(dormantAccountResult);
 
     return results;
   }

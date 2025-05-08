@@ -5,6 +5,8 @@ import { AccountHistory } from "./accounthistory.entity";
  */
 export class InMemoryAccountHistory implements AccountHistory {
   private storage: Map<string, number> = new Map();
+  private dateStorage: Map<string, string> = new Map();
+  private dormantFlags: Map<string, boolean> = new Map();
 
   async incDailyTx(
     account: string,
@@ -77,5 +79,53 @@ export class InMemoryAccountHistory implements AccountHistory {
     const bucketedTimestamp = this.getBucketedTimestamp(date, windowMinutes);
     const key = `velocity:${account}:${bucketedTimestamp}`;
     this.storage.set(key, count);
+  }
+
+  /**
+   * Flags account activity by updating the last activity date
+   * @param account The account to flag activity for
+   * @param date The date of the activity
+   * @returns The previous last activity date, or null if no previous activity
+   */
+  async flagActivity(account: string, date: Date): Promise<Date | null> {
+    const key = `lastactivity:${account}`;
+    const previousValue = this.dateStorage.get(key);
+    
+    // Store the new date
+    this.dateStorage.set(key, date.toISOString());
+    
+    return previousValue ? new Date(previousValue) : null;
+  }
+
+  /**
+   * Sets a flag indicating the account was dormant
+   * @param account The account to flag as dormant
+   * @param ttl Time-to-live in seconds for the flag (not used in mock)
+   */
+  async setWasDormant(account: string, ttl: number): Promise<void> {
+    const key = `wasdormant:${account}`;
+    this.dormantFlags.set(key, true);
+  }
+
+  /**
+   * Checks if an account was previously flagged as dormant
+   * @param account The account to check
+   * @returns True if the account was dormant, false otherwise
+   */
+  async getWasDormant(account: string): Promise<boolean> {
+    const key = `wasdormant:${account}`;
+    return this.dormantFlags.get(key) || false;
+  }
+
+  // Helper method for testing to set a specific last activity date
+  async setLastActivity(account: string, date: Date): Promise<void> {
+    const key = `lastactivity:${account}`;
+    this.dateStorage.set(key, date.toISOString());
+  }
+
+  // Helper method for testing to clear dormant flag
+  async clearWasDormant(account: string): Promise<void> {
+    const key = `wasdormant:${account}`;
+    this.dormantFlags.delete(key);
   }
 }

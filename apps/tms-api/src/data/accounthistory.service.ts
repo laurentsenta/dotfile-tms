@@ -97,6 +97,60 @@ export class AccountHistoryRedisService
     }
   }
 
+  /**
+   * Flags account activity by updating the last activity date
+   * @param account The account to flag activity for
+   * @param date The date of the activity
+   * @returns The previous last activity date, or null if no previous activity
+   */
+  async flagActivity(account: string, date: Date): Promise<Date | null> {
+    try {
+      const key = `account:history:lastactivity:${account}`;
+      const previousValue = await this.redisClient.get(key);
+      
+      // Convert date to ISO string for storage
+      const dateStr = date.toISOString();
+      await this.redisClient.set(key, dateStr);
+      
+      // Set a long expiration (1 year) since we want to track dormant accounts
+      await this.redisClient.expire(key, 60 * 60 * 24 * 365);
+      
+      return previousValue ? new Date(previousValue) : null;
+    } catch (error) {
+      throw new Error(`Failed to flag account activity: ${error.message}`);
+    }
+  }
+
+  /**
+   * Sets a flag indicating the account was dormant
+   * @param account The account to flag as dormant
+   * @param ttl Time-to-live in seconds for the flag
+   */
+  async setWasDormant(account: string, ttl: number): Promise<void> {
+    try {
+      const key = `account:history:wasdormant:${account}`;
+      await this.redisClient.set(key, '1');
+      await this.redisClient.expire(key, ttl);
+    } catch (error) {
+      throw new Error(`Failed to set dormant flag: ${error.message}`);
+    }
+  }
+
+  /**
+   * Checks if an account was previously flagged as dormant
+   * @param account The account to check
+   * @returns True if the account was dormant, false otherwise
+   */
+  async getWasDormant(account: string): Promise<boolean> {
+    try {
+      const key = `account:history:wasdormant:${account}`;
+      const value = await this.redisClient.get(key);
+      return value === '1';
+    } catch (error) {
+      throw new Error(`Failed to get dormant flag: ${error.message}`);
+    }
+  }
+
   async onModuleDestroy() {
     await this.redisClient.quit();
   }

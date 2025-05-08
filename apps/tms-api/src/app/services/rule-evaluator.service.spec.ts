@@ -6,6 +6,8 @@ import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
+import * as dormantAccountActivityModule from '../../domain/rules/dormant-account-activity';
+import { DORMANT_ACCOUNT_ACTIVITY_RULE_ID } from '../../domain/rules/dormant-account-activity';
 import * as highRiskMerchantsModule from '../../domain/rules/high-risk-merchants';
 import { HIGH_RISK_MERCHANTS_RULE_ID } from '../../domain/rules/high-risk-merchants';
 import * as highVelocityTransactionsModule from '../../domain/rules/high-velocity-transactions';
@@ -84,9 +86,12 @@ describe('RuleEvaluatorService', () => {
       expect(ruleRepository.findOne).toHaveBeenCalledWith({
         where: { name: HIGH_RISK_MERCHANTS_RULE_ID },
       });
+      expect(ruleRepository.findOne).toHaveBeenCalledWith({
+        where: { name: DORMANT_ACCOUNT_ACTIVITY_RULE_ID },
+      });
 
       // Verify save was called for all rules
-      expect(saveSpy).toHaveBeenCalledTimes(3);
+      expect(saveSpy).toHaveBeenCalledTimes(4);
       expect(saveSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           name: SUSPICIOUS_ACTIVITY_RULE_ID,
@@ -190,6 +195,18 @@ describe('RuleEvaluatorService', () => {
         })
       );
 
+      // Spy on the dormantAccountActivity function
+      const dormantAccountActivitySpy = jest.spyOn(
+        dormantAccountActivityModule,
+        'dormantAccountActivity'
+      );
+      dormantAccountActivitySpy.mockReturnValue(
+        Promise.resolve({
+          isSuspicious: false,
+          ruleName: DORMANT_ACCOUNT_ACTIVITY_RULE_ID,
+        })
+      );
+
       // Call inspect
       const results = await service.inspect(transaction);
 
@@ -206,9 +223,13 @@ describe('RuleEvaluatorService', () => {
         transaction,
         expect.any(Object) // RiskAccountsService
       );
+      expect(dormantAccountActivitySpy).toHaveBeenCalledWith(
+        transaction,
+        accountHistoryService
+      );
 
       // Verify the results array contains all rule results
-      expect(results).toHaveLength(3);
+      expect(results).toHaveLength(4);
       
       // Check first result (suspicious activity)
       expect(results[0].isSuspicious).toBe(true);
@@ -223,6 +244,10 @@ describe('RuleEvaluatorService', () => {
       expect(results[2].isSuspicious).toBe(true);
       expect(results[2].reason).toBe('Transaction involves a high-risk merchant');
       expect(results[2].ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
+      
+      // Check fourth result (dormant account activity)
+      expect(results[3].isSuspicious).toBe(false);
+      expect(results[3].ruleName).toBe(DORMANT_ACCOUNT_ACTIVITY_RULE_ID);
     });
   });
 });
