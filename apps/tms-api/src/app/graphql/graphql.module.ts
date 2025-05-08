@@ -8,6 +8,8 @@ import { RuleEvaluatorService } from '../services/rule-evaluator.service';
 import { AlertResolver } from './resolvers/alert.resolver';
 import { TransactionResolver } from './resolvers/transaction.resolver';
 import { RulesWorkerModule } from '../../rules/rules-worker.module';
+import { RedisModule } from '../../database/redis.module';
+import { RiskAccountsService } from '../../data/risk-accounts.service';
 
 @Module({
   imports: [
@@ -18,12 +20,14 @@ import { RulesWorkerModule } from '../../rules/rules-worker.module';
     }),
     TypeOrmModule.forFeature([Transaction, Rule, Alert]),
     RulesWorkerModule,
+    RedisModule,
   ],
   providers: [
     TransactionResolver,
     AlertResolver,
     AppService,
     RuleEvaluatorService,
+    RiskAccountsService,
   ],
 })
 export class GraphqlModule {}

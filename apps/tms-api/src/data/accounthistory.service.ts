@@ -107,14 +107,14 @@ export class AccountHistoryRedisService
     try {
       const key = `account:history:lastactivity:${account}`;
       const previousValue = await this.redisClient.get(key);
-      
+
       // Convert date to ISO string for storage
       const dateStr = date.toISOString();
       await this.redisClient.set(key, dateStr);
-      
-      // Set a long expiration (1 year) since we want to track dormant accounts
-      await this.redisClient.expire(key, 60 * 60 * 24 * 365);
-      
+
+      // Set a long expiration (10 year) since we want to track dormant accounts
+      await this.redisClient.expire(key, 60 * 60 * 24 * 365 * 10);
+
       return previousValue ? new Date(previousValue) : null;
     } catch (error) {
       throw new Error(`Failed to flag account activity: ${error.message}`);

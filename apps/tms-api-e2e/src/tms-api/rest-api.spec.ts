@@ -94,7 +94,7 @@ describe('Rules and Alerts API', () => {
     const getAlertsRes = await axios.get(`/api/v1/alerts/transaction/${transactionId}`);
     expect(getAlertsRes.status).toBe(200);
     expect(Array.isArray(getAlertsRes.data)).toBe(true);
-    
+
     // We don't expect any alerts for this transaction since we're not creating them automatically
     expect(getAlertsRes.data.length).toBe(0);
   });
@@ -110,8 +110,8 @@ describe('Transaction API', () => {
     const tx1: TransactionParam = {
       external_id: '12345',
       date: new Date().toISOString(),
-      source_account_key: 'source_account',
-      target_account_key: 'target_account',
+      source_account_key: 'test_source_account',
+      target_account_key: 'test_target_account',
       amount: 100 * CENTS,
       currency: 'USD',
       type: 'TRANSFER',
