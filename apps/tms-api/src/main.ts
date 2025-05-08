@@ -10,6 +10,7 @@ import { ApiModule } from './api.module';
 async function bootstrap() {
   const app = await NestFactory.create(ApiModule);
   
+  // TODO: Drop this and "hide" behind our dev reverse proxy.
   app.enableCors({
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
