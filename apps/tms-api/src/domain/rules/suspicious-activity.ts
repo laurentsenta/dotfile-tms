@@ -49,9 +49,6 @@ export async function suspiciousActivity(
   const account = transaction.sourceAccountKey;
   const day = formatDateToDay(transaction.date);
   
-  // Get current daily total before this transaction
-  const currentDailyTotal = await history.getDailyTxTotal(account, day);
-  
   // Increment the daily total with this transaction's amount
   const newDailyTotal = await history.incDailyTx(account, day, transaction.amount);
   
