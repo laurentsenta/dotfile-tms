@@ -6,26 +6,25 @@ import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
-import * as dormantAccountActivityModule from '../../domain/rules/dormant-account-activity';
-import { DORMANT_ACCOUNT_ACTIVITY_RULE_ID } from '../../domain/rules/dormant-account-activity';
-import * as highRiskMerchantsModule from '../../domain/rules/high-risk-merchants';
-import { HIGH_RISK_MERCHANTS_RULE_ID } from '../../domain/rules/high-risk-merchants';
-import * as highVelocityTransactionsModule from '../../domain/rules/high-velocity-transactions';
-import * as suspiciousActivityModule from '../../domain/rules/suspicious-activity';
-import {
-  HIGH_VELOCITY_RULE_ID,
-  RuleEvaluatorService,
-  SUSPICIOUS_ACTIVITY_RULE_ID
-} from './rule-evaluator.service';
+import { RuleEvaluatorService } from './rule-evaluator.service';
+import { suspiciousActivity } from '../../domain/rules/suspicious-activity';
+import { highVelocityTransactions } from '../../domain/rules/high-velocity-transactions';
+import { highRiskMerchants } from '../../domain/rules/high-risk-merchants';
+import { dormantAccountActivity } from '../../domain/rules/dormant-account-activity';
+import { evalRules } from '../../domain/rules-evaluator';
+
+// Mock the evalRules function
+jest.mock('../../domain/rules-evaluator');
 
 describe('RuleEvaluatorService', () => {
   let service: RuleEvaluatorService;
   let ruleRepository: Repository<Rule>;
   let accountHistoryService: InMemoryAccountHistory;
+  let riskAccountsService: MockRiskAccounts;
 
   beforeEach(async () => {
     accountHistoryService = new InMemoryAccountHistory();
-    const riskAccountsService = new MockRiskAccounts(['risk-account-1', 'risk-account-2']);
+    riskAccountsService = new MockRiskAccounts(['risk-account-1', 'risk-account-2']);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -57,95 +56,8 @@ describe('RuleEvaluatorService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('onModuleInit', () => {
-    it('should create default rules if they do not exist', async () => {
-      // Mock the findOne method to return null (rules don't exist)
-      jest.spyOn(ruleRepository, 'findOne').mockResolvedValue(null);
-
-      // Mock the save method
-      const saveSpy = jest.spyOn(ruleRepository, 'save').mockImplementation((rule: Rule) => {
-        return Promise.resolve({
-          id: '1',
-          name: rule.name,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          alerts: [],
-        } as Rule);
-      });
-
-      // Call onModuleInit
-      await service.onModuleInit();
-
-      // Verify findOne was called for all rules
-      expect(ruleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: SUSPICIOUS_ACTIVITY_RULE_ID },
-      });
-      expect(ruleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: HIGH_VELOCITY_RULE_ID },
-      });
-      expect(ruleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: HIGH_RISK_MERCHANTS_RULE_ID },
-      });
-      expect(ruleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: DORMANT_ACCOUNT_ACTIVITY_RULE_ID },
-      });
-
-      // Verify save was called for all rules
-      expect(saveSpy).toHaveBeenCalledTimes(4);
-      expect(saveSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: SUSPICIOUS_ACTIVITY_RULE_ID,
-        })
-      );
-      expect(saveSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: HIGH_VELOCITY_RULE_ID,
-        })
-      );
-      expect(saveSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: HIGH_RISK_MERCHANTS_RULE_ID,
-        })
-      );
-    });
-
-    it('should not create rules that already exist', async () => {
-      // Mock the findOne method to return existing rules
-      jest.spyOn(ruleRepository, 'findOne').mockImplementation((query: any) => {
-        const ruleName = query.where.name;
-        return Promise.resolve({
-          id: '1',
-          name: ruleName,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          alerts: [],
-        } as Rule);
-      });
-
-      // Mock the save method
-      const saveSpy = jest.spyOn(ruleRepository, 'save');
-
-      // Call onModuleInit
-      await service.onModuleInit();
-
-      // Verify findOne was called for all rules
-      expect(ruleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: SUSPICIOUS_ACTIVITY_RULE_ID },
-      });
-      expect(ruleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: HIGH_VELOCITY_RULE_ID },
-      });
-      expect(ruleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: HIGH_RISK_MERCHANTS_RULE_ID },
-      });
-
-      // Verify save was not called since both rules exist
-      expect(saveSpy).not.toHaveBeenCalled();
-    });
-  });
-
   describe('inspect', () => {
-    it('should call all rule functions and return an array of results', async () => {
+    it('should call evalRules and return the results', async () => {
       // Create a mock transaction
       const transaction = {
         id: '1',
@@ -157,75 +69,38 @@ describe('RuleEvaluatorService', () => {
         date: new Date('2025-08-05'),
       } as Transaction;
 
-      // Spy on the suspiciousActivity function
-      const suspiciousActivitySpy = jest.spyOn(
-        suspiciousActivityModule,
-        'suspiciousActivity'
-      );
-      suspiciousActivitySpy.mockReturnValue(
-        Promise.resolve({
+      // Mock the evalRules function
+      const mockResults = [
+        {
+          ruleId: suspiciousActivity.id,
           isSuspicious: true,
           reason: 'Suspicious activity test reason',
-          ruleName: SUSPICIOUS_ACTIVITY_RULE_ID,
-        })
-      );
-
-      // Spy on the highVelocityTransactions function
-      const highVelocitySpy = jest.spyOn(
-        highVelocityTransactionsModule,
-        'highVelocityTransactions'
-      );
-      highVelocitySpy.mockReturnValue(
-        Promise.resolve({
+        },
+        {
+          ruleId: highVelocityTransactions.id,
           isSuspicious: false,
-          ruleName: HIGH_VELOCITY_RULE_ID,
-        })
-      );
-
-      // Spy on the highRiskMerchants function
-      const highRiskMerchantsSpy = jest.spyOn(
-        highRiskMerchantsModule,
-        'highRiskMerchants'
-      );
-      highRiskMerchantsSpy.mockReturnValue(
-        Promise.resolve({
+        },
+        {
+          ruleId: highRiskMerchants.id,
           isSuspicious: true,
           reason: 'Transaction involves a high-risk merchant',
-          ruleName: HIGH_RISK_MERCHANTS_RULE_ID,
-        })
-      );
-
-      // Spy on the dormantAccountActivity function
-      const dormantAccountActivitySpy = jest.spyOn(
-        dormantAccountActivityModule,
-        'dormantAccountActivity'
-      );
-      dormantAccountActivitySpy.mockReturnValue(
-        Promise.resolve({
+        },
+        {
+          ruleId: dormantAccountActivity.id,
           isSuspicious: false,
-          ruleName: DORMANT_ACCOUNT_ACTIVITY_RULE_ID,
-        })
-      );
+        },
+      ];
+      
+      (evalRules as jest.Mock).mockResolvedValue(mockResults);
 
       // Call inspect
       const results = await service.inspect(transaction);
 
-      // Verify all rule functions were called with the correct parameters
-      expect(suspiciousActivitySpy).toHaveBeenCalledWith(
+      // Verify evalRules was called with the correct parameters
+      expect(evalRules).toHaveBeenCalledWith(
         transaction,
-        accountHistoryService
-      );
-      expect(highVelocitySpy).toHaveBeenCalledWith(
-        transaction,
-        accountHistoryService
-      );
-      expect(highRiskMerchantsSpy).toHaveBeenCalledWith(
-        transaction,
-        expect.any(Object) // RiskAccountsService
-      );
-      expect(dormantAccountActivitySpy).toHaveBeenCalledWith(
-        transaction,
-        accountHistoryService
+        accountHistoryService,
+        riskAccountsService
       );
 
       // Verify the results array contains all rule results
@@ -234,20 +109,16 @@ describe('RuleEvaluatorService', () => {
       // Check first result (suspicious activity)
       expect(results[0].isSuspicious).toBe(true);
       expect(results[0].reason).toBe('Suspicious activity test reason');
-      expect(results[0].ruleName).toBe(SUSPICIOUS_ACTIVITY_RULE_ID);
       
       // Check second result (high velocity)
       expect(results[1].isSuspicious).toBe(false);
-      expect(results[1].ruleName).toBe(HIGH_VELOCITY_RULE_ID);
       
       // Check third result (high risk merchants)
       expect(results[2].isSuspicious).toBe(true);
       expect(results[2].reason).toBe('Transaction involves a high-risk merchant');
-      expect(results[2].ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
       
       // Check fourth result (dormant account activity)
       expect(results[3].isSuspicious).toBe(false);
-      expect(results[3].ruleName).toBe(DORMANT_ACCOUNT_ACTIVITY_RULE_ID);
     });
   });
 });

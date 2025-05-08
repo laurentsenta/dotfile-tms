@@ -5,27 +5,8 @@ import { Repository } from 'typeorm';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
 import { RuleEvalResult } from '../../data/rule-eval-result.entity';
-import {
-  DORMANT_ACCOUNT_ACTIVITY_RULE_ID,
-  dormantAccountActivity,
-} from '../../domain/rules/dormant-account-activity';
-import {
-  HIGH_RISK_MERCHANTS_RULE_ID,
-  highRiskMerchants,
-} from '../../domain/rules/high-risk-merchants';
-import { highVelocityTransactions } from '../../domain/rules/high-velocity-transactions';
-import { suspiciousActivity } from '../../domain/rules/suspicious-activity';
+import { DEFAULT_RULES, evalRules } from '../../domain/rules-evaluator';
 import { CreateRuleDto } from '../dto/create-rule.dto';
-
-export const SUSPICIOUS_ACTIVITY_RULE_ID = 'suspicious_activity';
-export const HIGH_VELOCITY_RULE_ID = 'high_velocity_transactions';
-
-export const DEFAULT_RULE_IDS = [
-  SUSPICIOUS_ACTIVITY_RULE_ID,
-  HIGH_VELOCITY_RULE_ID,
-  HIGH_RISK_MERCHANTS_RULE_ID,
-  DORMANT_ACCOUNT_ACTIVITY_RULE_ID,
-];
 
 @Injectable()
 export class RuleEvaluatorService implements OnModuleInit {
@@ -65,57 +46,26 @@ export class RuleEvaluatorService implements OnModuleInit {
    * @returns An array of RuleEvalResult indicating if the transaction is suspicious according to any rules
    */
   async inspect(transaction: Transaction): Promise<RuleEvalResult[]> {
-    const results: RuleEvalResult[] = [];
-
-    // Check suspicious activity rule
-    const suspiciousActivityResult = await suspiciousActivity(
+    const results: RuleEvalResult[] = await evalRules(
       transaction,
-      this.accountHistoryService
-    );
-    results.push(suspiciousActivityResult);
-
-    // Check high velocity transactions rule
-    const highVelocityResult = await highVelocityTransactions(
-      transaction,
-      this.accountHistoryService
-    );
-    results.push(highVelocityResult);
-
-    // Check high risk merchants rule
-    const highRiskMerchantsResult = await highRiskMerchants(
-      transaction,
+      this.accountHistoryService,
       this.riskAccountsService
     );
-    results.push(highRiskMerchantsResult);
-
-    // Check dormant account activity rule
-    const dormantAccountResult = await dormantAccountActivity(
-      transaction,
-      this.accountHistoryService
-    );
-    results.push(dormantAccountResult);
 
     return results;
   }
 
-  /**
-   * Creates default rules if they don't exist
-   */
   private async createDefaultRulesIfNotExist(): Promise<void> {
-    for (const ruleName of DEFAULT_RULE_IDS) {
-      // Check if the rule already exists
+    for (const defaultRule of DEFAULT_RULES) {
       const existingRule = await this.ruleRepository.findOne({
-        where: { name: ruleName },
+        where: { name: defaultRule.id },
       });
 
       // If the rule doesn't exist, create it
       if (!existingRule) {
         const rule = new Rule();
-        rule.name = ruleName;
+        rule.name = defaultRule.id;
         await this.ruleRepository.save(rule);
-        console.log(`Created default rule: ${ruleName}`);
-      } else {
-        console.log(`Default rule already exists: ${ruleName}`);
       }
     }
   }

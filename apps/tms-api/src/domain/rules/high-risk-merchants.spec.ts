@@ -1,12 +1,11 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
+import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
-import {
-    HIGH_RISK_MERCHANTS_RULE_ID,
-    highRiskMerchants,
-} from './high-risk-merchants';
+import { highRiskMerchants } from './high-risk-merchants';
 
 describe('highRiskMerchants', () => {
   let riskAccounts: MockRiskAccounts;
+  let history: InMemoryAccountHistory;
 
   beforeEach(() => {
     riskAccounts = new MockRiskAccounts([
@@ -14,6 +13,7 @@ describe('highRiskMerchants', () => {
       'merchant-crypto-exchange-001',
       'merchant-offshore-001',
     ]);
+    history = new InMemoryAccountHistory();
   });
 
   it('should return isSuspicious=true when target account is a high-risk merchant', async () => {
@@ -26,11 +26,14 @@ describe('highRiskMerchants', () => {
       date: new Date('2025-08-05'),
     } as Transaction;
 
-    const result = await highRiskMerchants(transaction, riskAccounts);
+    const result = await highRiskMerchants.evaluate({
+      transaction,
+      riskAccounts,
+      history,
+    });
 
     expect(result.isSuspicious).toBe(true);
     expect(result.reason).toContain('merchant-gambling-001');
-    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
   });
 
   it('should return isSuspicious=true when source account is a high-risk merchant', async () => {
@@ -43,11 +46,14 @@ describe('highRiskMerchants', () => {
       date: new Date('2025-08-05'),
     } as Transaction;
 
-    const result = await highRiskMerchants(transaction, riskAccounts);
+    const result = await highRiskMerchants.evaluate({
+      transaction,
+      riskAccounts,
+      history,
+    });
 
     expect(result.isSuspicious).toBe(true);
     expect(result.reason).toContain('merchant-crypto-exchange-001');
-    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
   });
 
   it('should return isSuspicious=false when neither account is a high-risk merchant', async () => {
@@ -60,11 +66,14 @@ describe('highRiskMerchants', () => {
       date: new Date('2025-08-05'),
     } as Transaction;
 
-    const result = await highRiskMerchants(transaction, riskAccounts);
+    const result = await highRiskMerchants.evaluate({
+      transaction,
+      riskAccounts,
+      history,
+    });
 
     expect(result.isSuspicious).toBe(false);
     expect(result.reason).toBeUndefined();
-    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
   });
 
   it('should prioritize target account when both accounts are high-risk merchants', async () => {
@@ -77,10 +86,13 @@ describe('highRiskMerchants', () => {
       date: new Date('2025-08-05'),
     } as Transaction;
 
-    const result = await highRiskMerchants(transaction, riskAccounts);
+    const result = await highRiskMerchants.evaluate({
+      transaction,
+      riskAccounts,
+      history,
+    });
 
     expect(result.isSuspicious).toBe(true);
     expect(result.reason).toContain('merchant-gambling-001');
-    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
   });
 });

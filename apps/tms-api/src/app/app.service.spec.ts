@@ -1,11 +1,16 @@
+import {
+  Alert,
+  Rule,
+  Transaction,
+  TransactionTypeEnum,
+} from '@dotfile-tms/database';
 import { Test } from '@nestjs/testing';
-import { AppService } from './app.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Transaction, TransactionTypeEnum, Rule, Alert } from '@dotfile-tms/database';
+import { RuleEvalResult } from '../data/rule-eval-result.entity';
+import { TransactionQueueService } from '../rules/transaction-queue.service';
+import { AppService } from './app.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
-import { TransactionQueueService } from '../rules/transaction-queue.service';
-import { RuleEvalResult } from '../data/rule-eval-result.entity';
 
 describe('AppService', () => {
   let service: AppService;
@@ -18,24 +23,40 @@ describe('AppService', () => {
   beforeEach(async () => {
     mockTransactionRepository = {
       find: jest.fn().mockResolvedValue([]),
-      save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'test-id', ...entity })),
+      save: jest
+        .fn()
+        .mockImplementation((entity) =>
+          Promise.resolve({ id: 'test-id', ...entity })
+        ),
       findOne: jest.fn().mockResolvedValue(null),
     };
 
     mockRuleRepository = {
       find: jest.fn().mockResolvedValue([]),
       findOne: jest.fn().mockResolvedValue(null),
-      save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'rule-id', ...entity })),
+      save: jest
+        .fn()
+        .mockImplementation((entity) =>
+          Promise.resolve({ id: 'rule-id', ...entity })
+        ),
     };
 
     mockAlertRepository = {
       find: jest.fn().mockResolvedValue([]),
       findOne: jest.fn().mockResolvedValue(null),
-      save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
+      save: jest
+        .fn()
+        .mockImplementation((entity) =>
+          Promise.resolve({ id: 'alert-id', ...entity })
+        ),
     };
 
     mockRuleEvaluatorService = {
-      inspect: jest.fn().mockReturnValue([{ isSuspicious: false, ruleName: 'suspicious_activity' }]),
+      inspect: jest
+        .fn()
+        .mockReturnValue([
+          { isSuspicious: false, ruleName: 'suspicious_activity' },
+        ]),
     };
 
     mockTransactionQueueService = {
@@ -75,7 +96,7 @@ describe('AppService', () => {
     it('should return an array of transactions', async () => {
       const transactions = [{ id: '1', externalId: 'ext-1' }];
       mockTransactionRepository.find.mockResolvedValue(transactions);
-      
+
       expect(await service.listAllTransactions()).toBe(transactions);
       expect(mockTransactionRepository.find).toHaveBeenCalled();
     });
@@ -93,11 +114,14 @@ describe('AppService', () => {
         type: TransactionTypeEnum.CREDIT,
         metadata: {},
       };
-      
+
       const result = await service.createTransaction(createTransactionDto);
-      
+
       expect(result).toHaveProperty('id', 'test-id');
-      expect(result).toHaveProperty('externalId', createTransactionDto.external_id);
+      expect(result).toHaveProperty(
+        'externalId',
+        createTransactionDto.external_id
+      );
       expect(result).toHaveProperty('processedAt');
       expect(mockTransactionRepository.save).toHaveBeenCalled();
       expect(mockRuleEvaluatorService.inspect).toHaveBeenCalled();
@@ -116,45 +140,47 @@ describe('AppService', () => {
       };
 
       // Mock the transaction save
-      const savedTransaction = { 
-        id: 'test-id', 
+      const savedTransaction = {
+        id: 'test-id',
         ...createTransactionDto,
         externalId: createTransactionDto.external_id,
         sourceAccountKey: createTransactionDto.source_account_key,
         targetAccountKey: createTransactionDto.target_account_key,
-        processedAt: new Date()
+        processedAt: new Date(),
       };
       mockTransactionRepository.save.mockResolvedValue(savedTransaction);
-      
+
       // Mock the rule evaluator to return an array with one suspicious result
       const evalResults: RuleEvalResult[] = [
-        { 
-          isSuspicious: true, 
+        {
+          isSuspicious: true,
           reason: 'Amount exceeds threshold',
-          ruleName: 'suspicious_activity'
+          ruleId: 'suspicious_activity',
         },
         {
           isSuspicious: false,
-          ruleName: 'high_velocity_transactions'
-        }
+          ruleId: 'high_velocity_transactions',
+        },
       ];
       mockRuleEvaluatorService.inspect.mockReturnValue(evalResults);
-      
+
       // Mock the rule repository to return a rule
-      mockRuleRepository.findOne.mockResolvedValue({ 
-        id: 'rule-id', 
-        name: 'suspicious_activity' 
+      mockRuleRepository.findOne.mockResolvedValue({
+        id: 'rule-id',
+        name: 'suspicious_activity',
       });
-      
+
       // Mock the transaction findOne for alert creation
       mockTransactionRepository.findOne.mockResolvedValue(savedTransaction);
 
       const result = await service.createTransaction(createTransactionDto);
-      
+
       expect(result).toHaveProperty('id', 'test-id');
-      expect(mockRuleEvaluatorService.inspect).toHaveBeenCalledWith(savedTransaction);
+      expect(mockRuleEvaluatorService.inspect).toHaveBeenCalledWith(
+        savedTransaction
+      );
       expect(mockRuleRepository.findOne).toHaveBeenCalledWith({
-        where: { name: 'suspicious_activity' }
+        where: { name: 'suspicious_activity' },
       });
       expect(mockTransactionRepository.findOne).toHaveBeenCalled();
       expect(mockAlertRepository.save).toHaveBeenCalledWith(
@@ -162,7 +188,7 @@ describe('AppService', () => {
           rule: expect.objectContaining({ id: 'rule-id' }),
           transaction: expect.objectContaining({ id: 'test-id' }),
           status: 'NEW',
-          metadata: { reason: 'Amount exceeds threshold' }
+          metadata: { reason: 'Amount exceeds threshold' },
         })
       );
     });
@@ -180,31 +206,31 @@ describe('AppService', () => {
       };
 
       // Mock the transaction save
-      const savedTransaction = { 
-        id: 'test-id', 
+      const savedTransaction = {
+        id: 'test-id',
         ...createTransactionDto,
         externalId: createTransactionDto.external_id,
         sourceAccountKey: createTransactionDto.source_account_key,
         targetAccountKey: createTransactionDto.target_account_key,
-        processedAt: new Date()
+        processedAt: new Date(),
       };
       mockTransactionRepository.save.mockResolvedValue(savedTransaction);
-      
+
       // Mock the rule evaluator to return an array with multiple suspicious results
       const evalResults: RuleEvalResult[] = [
-        { 
-          isSuspicious: true, 
+        {
+          isSuspicious: true,
           reason: 'Amount exceeds threshold',
-          ruleName: 'suspicious_activity'
+          ruleId: 'suspicious_activity',
         },
         {
           isSuspicious: true,
           reason: 'High velocity detected',
-          ruleName: 'high_velocity_transactions'
-        }
+          ruleId: 'high_velocity_transactions',
+        },
       ];
       mockRuleEvaluatorService.inspect.mockReturnValue(evalResults);
-      
+
       // Mock the rule repository to return different rules based on name
       mockRuleRepository.findOne.mockImplementation((query) => {
         if (query.where.name === 'suspicious_activity') {
@@ -214,36 +240,38 @@ describe('AppService', () => {
         }
         return null;
       });
-      
+
       // Mock the transaction findOne for alert creation
       mockTransactionRepository.findOne.mockResolvedValue(savedTransaction);
 
       const result = await service.createTransaction(createTransactionDto);
-      
+
       expect(result).toHaveProperty('id', 'test-id');
-      expect(mockRuleEvaluatorService.inspect).toHaveBeenCalledWith(savedTransaction);
-      
+      expect(mockRuleEvaluatorService.inspect).toHaveBeenCalledWith(
+        savedTransaction
+      );
+
       // Should have been called twice, once for each suspicious rule
       expect(mockRuleRepository.findOne).toHaveBeenCalledTimes(2);
       expect(mockAlertRepository.save).toHaveBeenCalledTimes(2);
-      
+
       // Check first alert (suspicious_activity)
       expect(mockAlertRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           rule: expect.objectContaining({ id: 'rule-id-1' }),
           transaction: expect.objectContaining({ id: 'test-id' }),
           status: 'NEW',
-          metadata: { reason: 'Amount exceeds threshold' }
+          metadata: { reason: 'Amount exceeds threshold' },
         })
       );
-      
+
       // Check second alert (high_velocity_transactions)
       expect(mockAlertRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           rule: expect.objectContaining({ id: 'rule-id-2' }),
           transaction: expect.objectContaining({ id: 'test-id' }),
           status: 'NEW',
-          metadata: { reason: 'High velocity detected' }
+          metadata: { reason: 'High velocity detected' },
         })
       );
     });

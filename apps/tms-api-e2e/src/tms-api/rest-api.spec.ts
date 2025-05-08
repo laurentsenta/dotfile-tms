@@ -32,7 +32,10 @@ interface Alert {
   updated_at: string;
 }
 
-type TransactionParam = Omit<Transaction, 'id' | 'created_at' | 'updated_at' | 'processed_at'>; 
+type TransactionParam = Omit<
+  Transaction,
+  'id' | 'created_at' | 'updated_at' | 'processed_at'
+>;
 type RuleParam = Pick<Rule, 'name'>;
 
 const CENTS = 100;
@@ -51,7 +54,7 @@ describe('Rules and Alerts API', () => {
   it('should create a rule, list rules, and get a rule by name', async () => {
     // Step 1: Create a rule
     const rule: RuleParam = {
-      name: 'test_rule'
+      name: 'test_rule',
     };
 
     const createRuleRes = await axios.post('/api/v1/rules', rule);
@@ -63,7 +66,7 @@ describe('Rules and Alerts API', () => {
     const listRulesRes = await axios.get('/api/v1/rules');
     expect(listRulesRes.status).toBe(200);
     expect(Array.isArray(listRulesRes.data)).toBe(true);
-    
+
     // Should have at least the default rule and our new rule
     expect(listRulesRes.data.length).toBeGreaterThanOrEqual(2);
 
@@ -78,7 +81,7 @@ describe('Rules and Alerts API', () => {
     const tx: TransactionParam = {
       external_id: 'test-alerts-tx',
       date: new Date().toISOString(),
-      source_account_key: 'source_account',
+      source_account_key: 'source_account_a',
       target_account_key: 'target_account',
       amount: 100 * CENTS,
       currency: 'USD',
@@ -91,7 +94,9 @@ describe('Rules and Alerts API', () => {
     const transactionId = createTxRes.data.id;
 
     // Get alerts for the transaction
-    const getAlertsRes = await axios.get(`/api/v1/alerts/transaction/${transactionId}`);
+    const getAlertsRes = await axios.get(
+      `/api/v1/alerts/transaction/${transactionId}`
+    );
     expect(getAlertsRes.status).toBe(200);
     expect(Array.isArray(getAlertsRes.data)).toBe(true);
 
@@ -110,7 +115,7 @@ describe('Transaction API', () => {
     const tx1: TransactionParam = {
       external_id: '12345',
       date: new Date().toISOString(),
-      source_account_key: 'test_source_account',
+      source_account_key: 'source_account_b',
       target_account_key: 'test_target_account',
       amount: 100 * CENTS,
       currency: 'USD',
@@ -129,14 +134,16 @@ describe('Transaction API', () => {
     expect(Array.isArray(listRes.data)).toBe(true);
 
     // Step 3: Check that we retrieved the transaction
-    const gotTx1 = listRes.data.find(tx => tx.id === createRes.data.id);
+    const gotTx1 = listRes.data.find((tx) => tx.id === createRes.data.id);
 
     expect(gotTx1).toBeDefined();
     expect(gotTx1.amount).toBe(tx1.amount);
     expect(gotTx1.processedAt).toBeDefined();
 
     // Step 4: Check that no alerts were created for the transaction
-    const alertsRes = await axios.get(`/api/v1/alerts/transaction/${createRes.data.id}`);
+    const alertsRes = await axios.get(
+      `/api/v1/alerts/transaction/${createRes.data.id}`
+    );
     expect(alertsRes.status).toBe(200);
     expect(Array.isArray(alertsRes.data)).toBe(true);
     expect(alertsRes.data.length).toBe(0); // No alerts for this transaction
@@ -147,16 +154,17 @@ describe('Transaction API', () => {
       fail('Expected a 409 error but no error was thrown');
     } catch (error) {
       expect(error.response.status).toBe(409);
-      expect(error.response.data.message).toContain(`Transaction with external_id '${tx1.external_id}' already exists`);
+      expect(error.response.data.message).toContain(
+        `Transaction with external_id '${tx1.external_id}' already exists`
+      );
     }
 
-
     // Create a suspicious transaction (high amount)
-    const tx2: TransactionParam = { 
-      ...tx1, 
-      external_id: '67890', 
+    const tx2: TransactionParam = {
+      ...tx1,
+      external_id: '67890',
       amount: 15000 * CENTS,
-      type: 'TRANSFER'
+      type: 'TRANSFER',
     };
 
     // Step 1: Add the suspicious transaction
@@ -169,19 +177,21 @@ describe('Transaction API', () => {
     const listRes2 = await axios.get('/api/v1/transactions');
     expect(listRes2.status).toBe(200);
     expect(Array.isArray(listRes2.data)).toBe(true);
-    
-    const gotTx1Again = listRes2.data.find(tx => tx.id === createRes.data.id);
-    const gotTx2 = listRes2.data.find(tx => tx.id === createRes2.data.id);
-    
+
+    const gotTx1Again = listRes2.data.find((tx) => tx.id === createRes.data.id);
+    const gotTx2 = listRes2.data.find((tx) => tx.id === createRes2.data.id);
+
     expect(gotTx1Again).toBeDefined();
     expect(gotTx2).toBeDefined();
     expect(gotTx2.amount).toBe(tx2.amount);
-    
+
     // Step 4: Check that the "processed_at" field is set for the suspicious transaction
     expect(gotTx2.processedAt).toBeDefined();
 
     // Step 5: Check that an alert was created for the suspicious transaction
-    const alertsRes2 = await axios.get(`/api/v1/alerts/transaction/${createRes2.data.id}`);
+    const alertsRes2 = await axios.get(
+      `/api/v1/alerts/transaction/${createRes2.data.id}`
+    );
     expect(alertsRes2.status).toBe(200);
     expect(Array.isArray(alertsRes2.data)).toBe(true);
     expect(alertsRes2.data.length).toBe(1);

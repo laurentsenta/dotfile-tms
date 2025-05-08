@@ -1,12 +1,15 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
+import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { suspiciousActivity } from './suspicious-activity';
 
 describe('suspiciousActivity', () => {
-  let accountHistory: InMemoryAccountHistory;
+  let history: InMemoryAccountHistory;
+  let riskAccounts: MockRiskAccounts;
 
   beforeEach(() => {
-    accountHistory = new InMemoryAccountHistory();
+    history = new InMemoryAccountHistory();
+    riskAccounts = new MockRiskAccounts();
   });
 
   describe('Single transaction checks', () => {
@@ -20,7 +23,11 @@ describe('suspiciousActivity', () => {
         date: new Date('2025-08-05'),
       } as Transaction;
 
-      const result = await suspiciousActivity(transaction, accountHistory);
+      const result = await suspiciousActivity.evaluate({
+        transaction,
+        history,
+        riskAccounts,
+      });
 
       expect(result.isSuspicious).toBe(true);
       expect(result.reason).toContain('15000');
@@ -37,7 +44,11 @@ describe('suspiciousActivity', () => {
         date: new Date('2025-08-05'),
       } as Transaction;
 
-      const result = await suspiciousActivity(transaction, accountHistory);
+      const result = await suspiciousActivity.evaluate({
+        transaction,
+        history,
+        riskAccounts,
+      });
 
       expect(result.isSuspicious).toBe(false);
       expect(result.reason).toBeUndefined();
@@ -49,7 +60,7 @@ describe('suspiciousActivity', () => {
       // Set existing daily total to 8000
       const account = 'account-456';
       const day = '2025-08-05';
-      await accountHistory.setDailyTxTotal(account, day, 8000);
+      await history.setDailyTxTotal(account, day, 8000);
 
       // Create a transaction that would push the daily total over 10000
       const transaction = {
@@ -60,7 +71,11 @@ describe('suspiciousActivity', () => {
         date: new Date(day),
       } as Transaction;
 
-      const result = await suspiciousActivity(transaction, accountHistory);
+      const result = await suspiciousActivity.evaluate({
+        transaction,
+        history,
+        riskAccounts,
+      });
 
       expect(result.isSuspicious).toBe(true);
       expect(result.reason).toContain('Daily total');
@@ -72,7 +87,7 @@ describe('suspiciousActivity', () => {
       // Set existing daily total to 5000
       const account = 'account-789';
       const day = '2025-08-05';
-      await accountHistory.setDailyTxTotal(account, day, 5000);
+      await history.setDailyTxTotal(account, day, 5000);
 
       // Create a transaction that keeps the daily total under 10000
       const transaction = {
@@ -83,7 +98,11 @@ describe('suspiciousActivity', () => {
         date: new Date(day),
       } as Transaction;
 
-      const result = await suspiciousActivity(transaction, accountHistory);
+      const result = await suspiciousActivity.evaluate({
+        transaction,
+        history,
+        riskAccounts,
+      });
 
       expect(result.isSuspicious).toBe(false);
       expect(result.reason).toBeUndefined();
@@ -103,7 +122,11 @@ describe('suspiciousActivity', () => {
       } as Transaction;
 
       // Should not be suspicious
-      const result1 = await suspiciousActivity(transaction1, accountHistory);
+      const result1 = await suspiciousActivity.evaluate({
+        transaction: transaction1,
+        history,
+        riskAccounts,
+      });
       expect(result1.isSuspicious).toBe(false);
 
       // Second transaction (4000) - total now 7000
@@ -116,7 +139,11 @@ describe('suspiciousActivity', () => {
       } as Transaction;
 
       // Should still not be suspicious
-      const result2 = await suspiciousActivity(transaction2, accountHistory);
+      const result2 = await suspiciousActivity.evaluate({
+        transaction: transaction2,
+        history,
+        riskAccounts,
+      });
       expect(result2.isSuspicious).toBe(false);
 
       // Third transaction (4000) - total now 11000
@@ -129,7 +156,11 @@ describe('suspiciousActivity', () => {
       } as Transaction;
 
       // Should be suspicious as total exceeds 10000
-      const result3 = await suspiciousActivity(transaction3, accountHistory);
+      const result3 = await suspiciousActivity.evaluate({
+        transaction: transaction3,
+        history,
+        riskAccounts,
+      });
       expect(result3.isSuspicious).toBe(true);
       expect(result3.reason).toContain('Daily total');
       expect(result3.reason).toContain('11000');
