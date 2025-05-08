@@ -12,6 +12,7 @@ import { Transaction, Rule, Alert } from '@dotfile-tms/database';
 import { GraphqlModule } from './graphql/graphql.module';
 import { MessageQueueModule } from '../database/mq.module';
 import { RulesWorkerModule } from '../rules/rules-worker.module';
+import { RedisModule } from '../database/redis.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RulesWorkerModule } from '../rules/rules-worker.module';
     GraphqlModule,
     MessageQueueModule,
     RulesWorkerModule,
+    RedisModule,
   ],
   controllers: [
     AppController,

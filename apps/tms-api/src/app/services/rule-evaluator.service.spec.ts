@@ -1,17 +1,22 @@
+import { Rule, Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Rule, Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
+import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
+import { AccountHistoryRedisService } from '../../data/accounthistory.service';
+import * as suspiciousActivityModule from '../../domain/rules/suspiciousActivity';
 import { RuleEvaluatorService } from './rule-evaluator.service';
-import * as suspiciousActivityModule from '../rules/suspiciousActivity';
 
 const DEFAULT_RULE_ID = 'suspicious_activity';
 
 describe('RuleEvaluatorService', () => {
   let service: RuleEvaluatorService;
   let ruleRepository: Repository<Rule>;
+  let accountHistoryService: InMemoryAccountHistory;
 
   beforeEach(async () => {
+    accountHistoryService = new InMemoryAccountHistory();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RuleEvaluatorService,
@@ -21,6 +26,10 @@ describe('RuleEvaluatorService', () => {
             findOne: jest.fn(),
             save: jest.fn(),
           },
+        },
+        {
+          provide: AccountHistoryRedisService,
+          useValue: accountHistoryService,
         },
       ],
     }).compile();
@@ -37,7 +46,7 @@ describe('RuleEvaluatorService', () => {
     it('should create default rule if it does not exist', async () => {
       // Mock the findOne method to return null (rule doesn't exist)
       jest.spyOn(ruleRepository, 'findOne').mockResolvedValue(null);
-      
+
       // Mock the save method
       const saveSpy = jest.spyOn(ruleRepository, 'save').mockResolvedValue({
         id: '1',
@@ -59,7 +68,7 @@ describe('RuleEvaluatorService', () => {
       expect(saveSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           name: DEFAULT_RULE_ID,
-        }),
+        })
       );
     });
 
@@ -72,7 +81,7 @@ describe('RuleEvaluatorService', () => {
         updatedAt: new Date(),
         alerts: [],
       } as Rule);
-      
+
       // Mock the save method
       const saveSpy = jest.spyOn(ruleRepository, 'save');
 
@@ -90,28 +99,38 @@ describe('RuleEvaluatorService', () => {
   });
 
   describe('inspect', () => {
-    it('should call suspiciousActivity with the transaction', () => {
+    it('should call suspiciousActivity with the transaction and account history service', async () => {
       // Create a mock transaction
       const transaction = {
         id: '1',
         amount: 15000,
         currency: 'USD',
-        type: TransactionTypeEnum.TRANSFER
+        type: TransactionTypeEnum.TRANSFER,
+        sourceAccountKey: 'account-123',
+        date: new Date('2025-08-05'),
       } as Transaction;
 
       // Spy on the suspiciousActivity function
-      const suspiciousActivitySpy = jest.spyOn(suspiciousActivityModule, 'suspiciousActivity');
-      suspiciousActivitySpy.mockReturnValue({
-        isSuspicious: true,
-        reason: 'Test reason'
-      });
+      const suspiciousActivitySpy = jest.spyOn(
+        suspiciousActivityModule,
+        'suspiciousActivity'
+      );
+      suspiciousActivitySpy.mockReturnValue(
+        Promise.resolve({
+          isSuspicious: true,
+          reason: 'Test reason',
+        })
+      );
 
       // Call inspect
-      const result = service.inspect(transaction);
+      const result = await service.inspect(transaction);
 
-      // Verify suspiciousActivity was called with the transaction
-      expect(suspiciousActivitySpy).toHaveBeenCalledWith(transaction);
-      
+      // Verify suspiciousActivity was called with the transaction and account history service
+      expect(suspiciousActivitySpy).toHaveBeenCalledWith(
+        transaction,
+        accountHistoryService
+      );
+
       // Verify the result
       expect(result.isSuspicious).toBe(true);
       expect(result.reason).toBe('Test reason');

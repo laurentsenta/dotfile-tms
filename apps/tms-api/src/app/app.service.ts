@@ -59,7 +59,7 @@ export class AppService {
       // TODO: we have an issue here, we might miss transaction if the process dies between the save and notify.
       this.txQueueService.notifyTransactionCreated({ id: savedTransaction.id });
 
-      const evalResult = this.ruleEvaluatorService.inspect(savedTransaction);
+      const evalResult = await this.ruleEvaluatorService.inspect(savedTransaction);
 
       // If suspicious, create an alert
       if (evalResult.isSuspicious) {

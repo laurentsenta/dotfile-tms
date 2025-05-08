@@ -1,9 +1,13 @@
-import { Injectable, OnModuleInit, NotFoundException } from '@nestjs/common';
+import { Rule, Transaction } from '@dotfile-tms/database';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Rule, Transaction } from '@dotfile-tms/database';
+import { AccountHistoryRedisService } from '../../data/accounthistory.service';
+import {
+  EvalResult,
+  suspiciousActivity,
+} from '../../domain/rules/suspiciousActivity';
 import { CreateRuleDto } from '../dto/create-rule.dto';
-import { suspiciousActivity, EvalResult } from '../rules/suspiciousActivity';
 
 const DEFAULT_RULE_ID = 'suspicious_activity';
 
@@ -12,6 +16,7 @@ export class RuleEvaluatorService implements OnModuleInit {
   constructor(
     @InjectRepository(Rule)
     private ruleRepository: Repository<Rule>,
+    private accountHistoryService: AccountHistoryRedisService
   ) {}
 
   async onModuleInit() {
@@ -33,7 +38,7 @@ export class RuleEvaluatorService implements OnModuleInit {
   async createRule(createRuleDto: CreateRuleDto): Promise<Rule> {
     const rule = new Rule();
     rule.name = createRuleDto.name;
-    
+
     return this.ruleRepository.save(rule);
   }
 
@@ -42,17 +47,17 @@ export class RuleEvaluatorService implements OnModuleInit {
    * @param transaction The transaction to inspect
    * @returns An EvalResult indicating if the transaction is suspicious
    */
-  inspect(transaction: Transaction): EvalResult {
+  async inspect(transaction: Transaction): Promise<EvalResult> {
     // For now, we only have one rule to check
-    return suspiciousActivity(transaction);
+    return await suspiciousActivity(transaction, this.accountHistoryService);
   }
 
   private async createDefaultRuleIfNotExists(): Promise<void> {
     // Check if the default rule already exists
-    const defaultRule = await this.ruleRepository.findOne({ 
-      where: { name: DEFAULT_RULE_ID } 
+    const defaultRule = await this.ruleRepository.findOne({
+      where: { name: DEFAULT_RULE_ID },
     });
-    
+
     // If the default rule doesn't exist, create it
     if (!defaultRule) {
       const rule = new Rule();
