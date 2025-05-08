@@ -7,9 +7,9 @@ import {
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { RuleEvalResult } from '../data/rule-eval-result.entity';
+import { CreateTransactionDto } from '../interfaces/dto/create-transaction.dto';
 import { TransactionQueueService } from '../rules/transaction-queue.service';
 import { AppService } from './app.service';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
 
 describe('AppService', () => {

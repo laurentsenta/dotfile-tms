@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {
-  AppController,
-  TransactionsController,
-  RulesController,
-  AlertsController,
-} from './app.controller';
+import { RestController } from '../interfaces/rest/rest.controller';
+import { TransactionsController } from '../interfaces/rest/transactions.controller';
+import { RulesController } from '../interfaces/rest/rules.controller';
+import { AlertsController } from '../interfaces/rest/alerts.controller';
 import { AppService } from './app.service';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
-import { GraphqlModule } from './graphql/graphql.module';
+import { GraphqlModule } from '../interfaces/graphql/graphql.module';
 import { MessageQueueModule } from '../database/mq.module';
 import { RulesWorkerModule } from '../rules/rules-worker.module';
 import { RedisModule } from '../database/redis.module';
@@ -25,7 +23,7 @@ import { RiskAccountsService } from '../data/risk-accounts.service';
     RedisModule,
   ],
   controllers: [
-    AppController,
+    RestController,
     TransactionsController,
     RulesController,
     AlertsController,

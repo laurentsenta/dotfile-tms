@@ -6,7 +6,7 @@ import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
 import { RuleEvalResult } from '../../data/rule-eval-result.entity';
 import { DEFAULT_RULES, evalRules } from '../../domain/rules-evaluator';
-import { CreateRuleDto } from '../dto/create-rule.dto';
+import { CreateRuleDto } from '../../interfaces/dto/create-rule.dto';
 
 @Injectable()
 export class RuleEvaluatorService implements OnModuleInit {

@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CreateTransactionDto } from '../interfaces/dto/create-transaction.dto';
 import { TransactionQueueService } from '../rules/transaction-queue.service';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
 
 const UNIQUE_CONSTRAINT_VIOLATION_CODE = '23505';
