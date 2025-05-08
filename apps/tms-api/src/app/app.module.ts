@@ -13,6 +13,8 @@ import { GraphqlModule } from './graphql/graphql.module';
 import { MessageQueueModule } from '../database/mq.module';
 import { RulesWorkerModule } from '../rules/rules-worker.module';
 import { RedisModule } from '../database/redis.module';
+import { AccountHistoryRedisService } from '../data/accounthistory.service';
+import { RiskAccountsService } from '../data/risk-accounts.service';
 
 @Module({
   imports: [
@@ -28,6 +30,11 @@ import { RedisModule } from '../database/redis.module';
     RulesController,
     AlertsController,
   ],
-  providers: [AppService, RuleEvaluatorService],
+  providers: [
+    AppService, 
+    RuleEvaluatorService, 
+    AccountHistoryRedisService,
+    RiskAccountsService
+  ],
 })
 export class AppModule {}

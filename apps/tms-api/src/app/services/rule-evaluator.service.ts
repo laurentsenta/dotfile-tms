@@ -3,9 +3,14 @@ import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
+import { RiskAccountsService } from '../../data/risk-accounts.service';
 import { RuleEvalResult } from '../../data/rule-eval-result.entity';
-import { suspiciousActivity } from '../../domain/rules/suspicious-activity';
+import {
+  HIGH_RISK_MERCHANTS_RULE_ID,
+  highRiskMerchants,
+} from '../../domain/rules/high-risk-merchants';
 import { highVelocityTransactions } from '../../domain/rules/high-velocity-transactions';
+import { suspiciousActivity } from '../../domain/rules/suspicious-activity';
 import { CreateRuleDto } from '../dto/create-rule.dto';
 
 export const SUSPICIOUS_ACTIVITY_RULE_ID = 'suspicious_activity';
@@ -13,7 +18,8 @@ export const HIGH_VELOCITY_RULE_ID = 'high_velocity_transactions';
 
 export const DEFAULT_RULE_IDS = [
   SUSPICIOUS_ACTIVITY_RULE_ID,
-  HIGH_VELOCITY_RULE_ID
+  HIGH_VELOCITY_RULE_ID,
+  HIGH_RISK_MERCHANTS_RULE_ID,
 ];
 
 @Injectable()
@@ -21,7 +27,8 @@ export class RuleEvaluatorService implements OnModuleInit {
   constructor(
     @InjectRepository(Rule)
     private ruleRepository: Repository<Rule>,
-    private accountHistoryService: AccountHistoryRedisService
+    private accountHistoryService: AccountHistoryRedisService,
+    private riskAccountsService: RiskAccountsService
   ) {}
 
   async onModuleInit() {
@@ -54,15 +61,28 @@ export class RuleEvaluatorService implements OnModuleInit {
    */
   async inspect(transaction: Transaction): Promise<RuleEvalResult[]> {
     const results: RuleEvalResult[] = [];
-    
+
     // Check suspicious activity rule
-    const suspiciousActivityResult = await suspiciousActivity(transaction, this.accountHistoryService);
+    const suspiciousActivityResult = await suspiciousActivity(
+      transaction,
+      this.accountHistoryService
+    );
     results.push(suspiciousActivityResult);
-    
+
     // Check high velocity transactions rule
-    const highVelocityResult = await highVelocityTransactions(transaction, this.accountHistoryService);
+    const highVelocityResult = await highVelocityTransactions(
+      transaction,
+      this.accountHistoryService
+    );
     results.push(highVelocityResult);
-    
+
+    // Check high risk merchants rule
+    const highRiskMerchantsResult = await highRiskMerchants(
+      transaction,
+      this.riskAccountsService
+    );
+    results.push(highRiskMerchantsResult);
+
     return results;
   }
 

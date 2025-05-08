@@ -1,0 +1,86 @@
+import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
+import { MockRiskAccounts } from '../../data/risk-accounts.mock';
+import {
+    HIGH_RISK_MERCHANTS_RULE_ID,
+    highRiskMerchants,
+} from './high-risk-merchants';
+
+describe('highRiskMerchants', () => {
+  let riskAccounts: MockRiskAccounts;
+
+  beforeEach(() => {
+    riskAccounts = new MockRiskAccounts([
+      'merchant-gambling-001',
+      'merchant-crypto-exchange-001',
+      'merchant-offshore-001',
+    ]);
+  });
+
+  it('should return isSuspicious=true when target account is a high-risk merchant', async () => {
+    const transaction = {
+      amount: 1000,
+      currency: 'USD',
+      type: TransactionTypeEnum.TRANSFER,
+      sourceAccountKey: 'regular-account-001',
+      targetAccountKey: 'merchant-gambling-001',
+      date: new Date('2025-08-05'),
+    } as Transaction;
+
+    const result = await highRiskMerchants(transaction, riskAccounts);
+
+    expect(result.isSuspicious).toBe(true);
+    expect(result.reason).toContain('merchant-gambling-001');
+    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
+  });
+
+  it('should return isSuspicious=true when source account is a high-risk merchant', async () => {
+    const transaction = {
+      amount: 1000,
+      currency: 'USD',
+      type: TransactionTypeEnum.TRANSFER,
+      sourceAccountKey: 'merchant-crypto-exchange-001',
+      targetAccountKey: 'regular-account-001',
+      date: new Date('2025-08-05'),
+    } as Transaction;
+
+    const result = await highRiskMerchants(transaction, riskAccounts);
+
+    expect(result.isSuspicious).toBe(true);
+    expect(result.reason).toContain('merchant-crypto-exchange-001');
+    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
+  });
+
+  it('should return isSuspicious=false when neither account is a high-risk merchant', async () => {
+    const transaction = {
+      amount: 1000,
+      currency: 'USD',
+      type: TransactionTypeEnum.TRANSFER,
+      sourceAccountKey: 'regular-account-001',
+      targetAccountKey: 'regular-account-002',
+      date: new Date('2025-08-05'),
+    } as Transaction;
+
+    const result = await highRiskMerchants(transaction, riskAccounts);
+
+    expect(result.isSuspicious).toBe(false);
+    expect(result.reason).toBeUndefined();
+    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
+  });
+
+  it('should prioritize target account when both accounts are high-risk merchants', async () => {
+    const transaction = {
+      amount: 1000,
+      currency: 'USD',
+      type: TransactionTypeEnum.TRANSFER,
+      sourceAccountKey: 'merchant-crypto-exchange-001',
+      targetAccountKey: 'merchant-gambling-001',
+      date: new Date('2025-08-05'),
+    } as Transaction;
+
+    const result = await highRiskMerchants(transaction, riskAccounts);
+
+    expect(result.isSuspicious).toBe(true);
+    expect(result.reason).toContain('merchant-gambling-001');
+    expect(result.ruleName).toBe(HIGH_RISK_MERCHANTS_RULE_ID);
+  });
+});
