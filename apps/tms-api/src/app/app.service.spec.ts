@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Transaction, TransactionTypeEnum, Rule, Alert } from '@dotfile-tms/database';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
+import { TransactionQueueService } from '../rules/transaction-queue.service';
 
 describe('AppService', () => {
   let service: AppService;
@@ -11,6 +12,7 @@ describe('AppService', () => {
   let mockRuleRepository: any;
   let mockAlertRepository: any;
   let mockRuleEvaluatorService: any;
+  let mockTransactionQueueService: any;
 
   beforeEach(async () => {
     mockTransactionRepository = {
@@ -35,6 +37,10 @@ describe('AppService', () => {
       inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
     };
 
+    mockTransactionQueueService = {
+      notifyTransactionCreated: jest.fn(),
+    };
+
     const app = await Test.createTestingModule({
       providers: [
         AppService,
@@ -53,6 +59,10 @@ describe('AppService', () => {
         {
           provide: RuleEvaluatorService,
           useValue: mockRuleEvaluatorService,
+        },
+        {
+          provide: TransactionQueueService,
+          useValue: mockTransactionQueueService,
         },
       ],
     }).compile();

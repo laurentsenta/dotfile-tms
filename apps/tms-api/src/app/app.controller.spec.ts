@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
+import { TransactionQueueService } from '../rules/transaction-queue.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -46,6 +47,12 @@ describe('AppController', () => {
             getRuleByName: jest.fn().mockResolvedValue({}),
             createRule: jest.fn().mockResolvedValue({}),
             onModuleInit: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: TransactionQueueService,
+          useValue: {
+            notifyTransactionCreated: jest.fn().mockReturnValue(undefined),
           },
         },
       ],
@@ -103,6 +110,12 @@ describe('TransactionsController', () => {
             getRuleByName: jest.fn().mockResolvedValue({}),
             createRule: jest.fn().mockResolvedValue({}),
             onModuleInit: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: TransactionQueueService,
+          useValue: {
+            notifyTransactionCreated: jest.fn().mockReturnValue(undefined),
           },
         },
       ],

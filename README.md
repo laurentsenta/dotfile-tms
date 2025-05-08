@@ -32,6 +32,7 @@ Logging a few tasks, as I'm "spiking" through nestjs for now to get the scalable
 
 Logging a few tasks, as finding the idioms and patterns in nestjs would prevent me from focusing on the system'ic part of the project.
 
+- [ ] Move configuration for redis to an external config, and use a keyPrefix, which we can override during testing
 - [ ] Move the server's URL to an external config in the frontend
 - [ ] Remove overly permissive CORS settings and dig into the traefik config
 - [ ] In the e2e tests, import the type from the DTO somehow instead of duplicating it
