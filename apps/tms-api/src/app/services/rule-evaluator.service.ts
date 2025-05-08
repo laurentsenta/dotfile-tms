@@ -6,7 +6,7 @@ import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import {
   EvalResult,
   suspiciousActivity,
-} from '../../domain/rules/suspiciousActivity';
+} from '../../domain/rules/suspicious-activity';
 import { CreateRuleDto } from '../dto/create-rule.dto';
 
 const DEFAULT_RULE_ID = 'suspicious_activity';

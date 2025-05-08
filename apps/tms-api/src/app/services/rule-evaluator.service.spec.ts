@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
-import * as suspiciousActivityModule from '../../domain/rules/suspiciousActivity';
+import * as suspiciousActivityModule from '../../domain/rules/suspicious-activity';
 import { RuleEvaluatorService } from './rule-evaluator.service';
 
 const DEFAULT_RULE_ID = 'suspicious_activity';

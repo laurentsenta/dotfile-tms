@@ -1,6 +1,6 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { InMemoryAccountHistory } from '../../data/accounthistory.mock';
-import { suspiciousActivity } from './suspiciousActivity';
+import { suspiciousActivity } from './suspicious-activity';
 
 describe('suspiciousActivity', () => {
   let accountHistory: InMemoryAccountHistory;
