@@ -1,5 +1,6 @@
 import { OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { differenceInMinutes, format } from 'date-fns';
 import Redis from 'ioredis';
 import { AccountHistory } from './accounthistory.entity';
 
@@ -22,12 +23,18 @@ export class AccountHistoryRedisService
     });
   }
 
+  private getBucketedTimestamp(date: Date, windowMinutes: number): number {
+    const minutesSinceEpoch = differenceInMinutes(date, new Date(0));
+    return Math.floor(minutesSinceEpoch / windowMinutes) * windowMinutes;
+  }
+
   async incDailyTx(
     account: string,
-    day: string,
+    date: Date,
     amount: number
   ): Promise<number> {
     try {
+      const day = format(date, 'yyyy-MM-dd');
       const key = `account:history:daily:${account}:${day}`;
       const newTotal = await this.redisClient.incrby(key, amount);
       await this.redisClient.expire(key, 60 * 60 * 24 * 30);
@@ -40,25 +47,15 @@ export class AccountHistoryRedisService
     }
   }
 
-  async getDailyTxTotal(account: string, day: string): Promise<number> {
+  async getDailyTxTotal(account: string, date: Date): Promise<number> {
     try {
+      const day = format(date, 'yyyy-MM-dd');
       const key = `account:history:daily:${account}:${day}`;
       const value = await this.redisClient.get(key);
       return value ? parseFloat(value) : 0;
     } catch (error) {
       throw new Error(`Failed to get daily transaction: ${error.message}`);
     }
-  }
-
-  /**
-   * Converts a date to a bucketed time window
-   * @param date The date to bucket
-   * @param windowMinutes The time window in minutes
-   * @returns Bucketed timestamp (minutes since epoch, rounded to window)
-   */
-  private getBucketedTimestamp(date: Date, windowMinutes: number): number {
-    const minutesSinceEpoch = Math.floor(date.getTime() / (60 * 1000));
-    return Math.floor(minutesSinceEpoch / windowMinutes) * windowMinutes;
   }
 
   async incTxCount(
@@ -70,7 +67,7 @@ export class AccountHistoryRedisService
       const bucketedTimestamp = this.getBucketedTimestamp(date, windowMinutes);
       const key = `account:history:velocity:${account}:${bucketedTimestamp}`;
       const newCount = await this.redisClient.incr(key);
-      
+
       // TODO: optimize this by computing an expiration time based on the window.
       await this.redisClient.expire(key, 60 * 60 * 1);
 
@@ -99,8 +96,6 @@ export class AccountHistoryRedisService
 
   /**
    * Flags account activity by updating the last activity date
-   * @param account The account to flag activity for
-   * @param date The date of the activity
    * @returns The previous last activity date, or null if no previous activity
    */
   async flagActivity(account: string, date: Date): Promise<Date | null> {
@@ -121,11 +116,6 @@ export class AccountHistoryRedisService
     }
   }
 
-  /**
-   * Sets a flag indicating the account was dormant
-   * @param account The account to flag as dormant
-   * @param ttl Time-to-live in seconds for the flag
-   */
   async setWasDormant(account: string, ttl: number): Promise<void> {
     try {
       const key = `account:history:wasdormant:${account}`;
@@ -136,11 +126,6 @@ export class AccountHistoryRedisService
     }
   }
 
-  /**
-   * Checks if an account was previously flagged as dormant
-   * @param account The account to check
-   * @returns True if the account was dormant, false otherwise
-   */
   async getWasDormant(account: string): Promise<boolean> {
     try {
       const key = `account:history:wasdormant:${account}`;

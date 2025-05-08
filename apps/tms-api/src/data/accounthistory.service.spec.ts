@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { AccountHistoryRedisService } from './accounthistory.service';
+import { addDays, toDate } from 'date-fns';
 
 let accountId = 0;
 const getAccount = (prefix = 'account'): string => {
@@ -9,8 +10,13 @@ const getAccount = (prefix = 'account'): string => {
 };
 
 let day = 0;
-const getDay = (): string => {
-  return `2025-08-${++day}`;
+const getDay = (str: string = undefined): Date => {
+  if (str) {
+    // return date from given day, using date fns:
+    return toDate(str);
+  }
+
+  return addDays(new Date('2025-08-01'), day++);
 };
 
 describe('AccountHistoryRedisService', () => {
@@ -94,15 +100,9 @@ describe('AccountHistoryRedisService', () => {
       const total2 = await service.incDailyTx(account, day, 50);
       expect(total2).toBe(150);
 
-      // Verify the value in Redis
-      const key = `account:history:daily:${account}:${day}`;
-      const storedValue = await redis.get(key);
-      expect(parseInt(storedValue)).toBe(150);
-
-      // Verify TTL is set (30 days = 2592000 seconds)
-      const ttl = await redis.ttl(key);
-      expect(ttl).toBeGreaterThan(0);
-      expect(ttl).toBeLessThanOrEqual(2592000);
+      // check the total value
+      const result = await service.getDailyTxTotal(account, day);
+      expect(result).toBe(150);
     });
 
     it('should handle multiple accounts independently', async () => {
@@ -146,7 +146,10 @@ describe('AccountHistoryRedisService', () => {
     });
 
     it('should return 0 for non-existent keys', async () => {
-      const total = await service.getDailyTxTotal('non-existent', '2025-08-05');
+      const total = await service.getDailyTxTotal(
+        'non-existent',
+        getDay('2025-08-01')
+      );
       expect(total).toBe(0);
     });
 

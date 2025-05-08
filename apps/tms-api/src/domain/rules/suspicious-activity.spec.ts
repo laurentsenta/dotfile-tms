@@ -2,6 +2,7 @@ import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { MockAccountHistory } from '../../data/accounthistory.mock';
 import { MockRiskAccounts } from '../../data/risk-accounts.mock';
 import { suspiciousActivity } from './suspicious-activity';
+import { toDate } from 'date-fns';
 
 describe('suspiciousActivity', () => {
   let history: MockAccountHistory;
@@ -60,7 +61,7 @@ describe('suspiciousActivity', () => {
       // Set existing daily total to 8000
       const account = 'account-456';
       const day = '2025-08-05';
-      await history.setDailyTxTotal(account, day, 8000);
+      await history.setDailyTxTotal(account, toDate(day), 8000);
 
       // Create a transaction that would push the daily total over 10000
       const transaction = {
@@ -87,7 +88,7 @@ describe('suspiciousActivity', () => {
       // Set existing daily total to 5000
       const account = 'account-789';
       const day = '2025-08-05';
-      await history.setDailyTxTotal(account, day, 5000);
+      await history.setDailyTxTotal(account, toDate(day), 5000);
 
       // Create a transaction that keeps the daily total under 10000
       const transaction = {

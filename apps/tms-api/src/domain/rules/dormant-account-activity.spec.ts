@@ -19,7 +19,7 @@ describe('dormantAccountActivity', () => {
     transaction = {
       id: '1',
       externalId: 'ext1',
-      date: currentDate.toISOString(),
+      date: currentDate,
       sourceAccountKey: sourceAccount,
       targetAccountKey: targetAccount,
       amount: 100,
@@ -84,8 +84,7 @@ describe('dormantAccountActivity', () => {
     await history.setWasDormant(sourceAccount, 3600);
 
     // Set daily transaction total above threshold
-    const day = currentDate.toISOString().split('T')[0];
-    await history.setDailyTxTotal(sourceAccount, day, 6);
+    await history.setDailyTxTotal(sourceAccount, currentDate, 6);
 
     // Set previous activity 10 days ago (account is no longer dormant)
     const previousDate = new Date(currentDate);
@@ -107,8 +106,7 @@ describe('dormantAccountActivity', () => {
     await history.setWasDormant(sourceAccount, 3600);
 
     // Set daily transaction total below threshold
-    const day = currentDate.toISOString().split('T')[0];
-    await history.setDailyTxTotal(sourceAccount, day, 3);
+    await history.setDailyTxTotal(sourceAccount, currentDate, 3);
 
     // Set previous activity 10 days ago (account is no longer dormant)
     const previousDate = new Date(currentDate);

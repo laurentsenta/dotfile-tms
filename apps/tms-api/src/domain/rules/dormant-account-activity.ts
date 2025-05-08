@@ -1,3 +1,4 @@
+import { differenceInDays } from 'date-fns';
 import { RuleBase } from './rule-base';
 
 const CONFIG = {
@@ -7,9 +8,7 @@ const CONFIG = {
 };
 
 function daysBetween(date1: Date, date2: Date): number {
-  const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
-  const diffMs = Math.abs(date1.getTime() - date2.getTime());
-  return Math.round(diffMs / oneDay);
+  return differenceInDays(date1, date2);
 }
 
 /**
@@ -22,19 +21,19 @@ export const dormantAccountActivity: RuleBase = {
   id: 'dormant_account_activity',
   
   evaluate: async ({ transaction, history }) => {
-    const transactionDate = new Date(transaction.date);
-    const day = transactionDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
     // Flag the activity and get the previous activity date
     const previousActivityDate = await history.flagActivity(
       transaction.sourceAccountKey,
-      transactionDate
+      transaction.date
     );
 
     // Calculate days since last activity if there was previous activity
     let daysSinceLastActivity = 0;
     if (previousActivityDate) {
-      daysSinceLastActivity = daysBetween(transactionDate, previousActivityDate);
+      daysSinceLastActivity = daysBetween(
+        transaction.date,
+        previousActivityDate
+      );
     }
 
     // Check if the account was dormant (no activity for DORMANCY_THRESHOLD_DAYS)
@@ -55,7 +54,7 @@ export const dormantAccountActivity: RuleBase = {
     if (isDormant) {
       const dailyTxTotal = await history.getDailyTxTotal(
         transaction.sourceAccountKey,
-        day
+        transaction.date
       );
 
       if (dailyTxTotal >= CONFIG.SUSPICIOUS_DAILY_TX_THRESHOLD) {
