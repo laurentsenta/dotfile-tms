@@ -50,6 +50,53 @@ export class AccountHistoryRedisService
     }
   }
 
+  /**
+   * Converts a date to a bucketed time window
+   * @param date The date to bucket
+   * @param windowMinutes The time window in minutes
+   * @returns Bucketed timestamp (minutes since epoch, rounded to window)
+   */
+  private getBucketedTimestamp(date: Date, windowMinutes: number): number {
+    const minutesSinceEpoch = Math.floor(date.getTime() / (60 * 1000));
+    return Math.floor(minutesSinceEpoch / windowMinutes) * windowMinutes;
+  }
+
+  async incTxCount(
+    account: string,
+    date: Date,
+    windowMinutes: number
+  ): Promise<number> {
+    try {
+      const bucketedTimestamp = this.getBucketedTimestamp(date, windowMinutes);
+      const key = `account:history:velocity:${account}:${bucketedTimestamp}`;
+      const newCount = await this.redisClient.incr(key);
+      
+      // TODO: optimize this by computing an expiration time based on the window.
+      await this.redisClient.expire(key, 60 * 60 * 1);
+
+      return newCount;
+    } catch (error) {
+      throw new Error(
+        `Failed to increment transaction count: ${error.message}`
+      );
+    }
+  }
+
+  async getTxCount(
+    account: string,
+    date: Date,
+    windowMinutes: number
+  ): Promise<number> {
+    try {
+      const bucketedTimestamp = this.getBucketedTimestamp(date, windowMinutes);
+      const key = `account:history:velocity:${account}:${bucketedTimestamp}`;
+      const value = await this.redisClient.get(key);
+      return value ? parseInt(value, 10) : 0;
+    } catch (error) {
+      throw new Error(`Failed to get transaction count: ${error.message}`);
+    }
+  }
+
   async onModuleDestroy() {
     await this.redisClient.quit();
   }

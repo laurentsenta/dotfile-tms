@@ -5,6 +5,7 @@ import { Transaction, TransactionTypeEnum, Rule, Alert } from '@dotfile-tms/data
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
 import { TransactionQueueService } from '../rules/transaction-queue.service';
+import { RuleEvalResult } from '../data/rule-eval-result.entity';
 
 describe('AppService', () => {
   let service: AppService;
@@ -34,7 +35,7 @@ describe('AppService', () => {
     };
 
     mockRuleEvaluatorService = {
-      inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
+      inspect: jest.fn().mockReturnValue([{ isSuspicious: false, ruleName: 'suspicious_activity' }]),
     };
 
     mockTransactionQueueService = {
@@ -102,7 +103,7 @@ describe('AppService', () => {
       expect(mockRuleEvaluatorService.inspect).toHaveBeenCalled();
     });
 
-    it('should create an alert if transaction is suspicious', async () => {
+    it('should create an alert if any rule evaluation is suspicious', async () => {
       const createTransactionDto: CreateTransactionDto = {
         external_id: 'test-external-id',
         date: new Date().toISOString(),
@@ -125,11 +126,19 @@ describe('AppService', () => {
       };
       mockTransactionRepository.save.mockResolvedValue(savedTransaction);
       
-      // Mock the rule evaluator to return suspicious
-      mockRuleEvaluatorService.inspect.mockReturnValue({ 
-        isSuspicious: true, 
-        reason: 'Amount exceeds threshold' 
-      });
+      // Mock the rule evaluator to return an array with one suspicious result
+      const evalResults: RuleEvalResult[] = [
+        { 
+          isSuspicious: true, 
+          reason: 'Amount exceeds threshold',
+          ruleName: 'suspicious_activity'
+        },
+        {
+          isSuspicious: false,
+          ruleName: 'high_velocity_transactions'
+        }
+      ];
+      mockRuleEvaluatorService.inspect.mockReturnValue(evalResults);
       
       // Mock the rule repository to return a rule
       mockRuleRepository.findOne.mockResolvedValue({ 
@@ -144,7 +153,9 @@ describe('AppService', () => {
       
       expect(result).toHaveProperty('id', 'test-id');
       expect(mockRuleEvaluatorService.inspect).toHaveBeenCalledWith(savedTransaction);
-      expect(mockRuleRepository.findOne).toHaveBeenCalled();
+      expect(mockRuleRepository.findOne).toHaveBeenCalledWith({
+        where: { name: 'suspicious_activity' }
+      });
       expect(mockTransactionRepository.findOne).toHaveBeenCalled();
       expect(mockAlertRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -152,6 +163,87 @@ describe('AppService', () => {
           transaction: expect.objectContaining({ id: 'test-id' }),
           status: 'NEW',
           metadata: { reason: 'Amount exceeds threshold' }
+        })
+      );
+    });
+
+    it('should create multiple alerts if multiple rules are suspicious', async () => {
+      const createTransactionDto: CreateTransactionDto = {
+        external_id: 'test-external-id',
+        date: new Date().toISOString(),
+        source_account_key: 'source',
+        target_account_key: 'target',
+        amount: 15000,
+        currency: 'USD',
+        type: TransactionTypeEnum.CREDIT,
+        metadata: {},
+      };
+
+      // Mock the transaction save
+      const savedTransaction = { 
+        id: 'test-id', 
+        ...createTransactionDto,
+        externalId: createTransactionDto.external_id,
+        sourceAccountKey: createTransactionDto.source_account_key,
+        targetAccountKey: createTransactionDto.target_account_key,
+        processedAt: new Date()
+      };
+      mockTransactionRepository.save.mockResolvedValue(savedTransaction);
+      
+      // Mock the rule evaluator to return an array with multiple suspicious results
+      const evalResults: RuleEvalResult[] = [
+        { 
+          isSuspicious: true, 
+          reason: 'Amount exceeds threshold',
+          ruleName: 'suspicious_activity'
+        },
+        {
+          isSuspicious: true,
+          reason: 'High velocity detected',
+          ruleName: 'high_velocity_transactions'
+        }
+      ];
+      mockRuleEvaluatorService.inspect.mockReturnValue(evalResults);
+      
+      // Mock the rule repository to return different rules based on name
+      mockRuleRepository.findOne.mockImplementation((query) => {
+        if (query.where.name === 'suspicious_activity') {
+          return { id: 'rule-id-1', name: 'suspicious_activity' };
+        } else if (query.where.name === 'high_velocity_transactions') {
+          return { id: 'rule-id-2', name: 'high_velocity_transactions' };
+        }
+        return null;
+      });
+      
+      // Mock the transaction findOne for alert creation
+      mockTransactionRepository.findOne.mockResolvedValue(savedTransaction);
+
+      const result = await service.createTransaction(createTransactionDto);
+      
+      expect(result).toHaveProperty('id', 'test-id');
+      expect(mockRuleEvaluatorService.inspect).toHaveBeenCalledWith(savedTransaction);
+      
+      // Should have been called twice, once for each suspicious rule
+      expect(mockRuleRepository.findOne).toHaveBeenCalledTimes(2);
+      expect(mockAlertRepository.save).toHaveBeenCalledTimes(2);
+      
+      // Check first alert (suspicious_activity)
+      expect(mockAlertRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rule: expect.objectContaining({ id: 'rule-id-1' }),
+          transaction: expect.objectContaining({ id: 'test-id' }),
+          status: 'NEW',
+          metadata: { reason: 'Amount exceeds threshold' }
+        })
+      );
+      
+      // Check second alert (high_velocity_transactions)
+      expect(mockAlertRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rule: expect.objectContaining({ id: 'rule-id-2' }),
+          transaction: expect.objectContaining({ id: 'test-id' }),
+          status: 'NEW',
+          metadata: { reason: 'High velocity detected' }
         })
       );
     });

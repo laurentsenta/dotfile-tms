@@ -1,13 +1,6 @@
 import { Transaction } from '@dotfile-tms/database';
 import { AccountHistory } from '../../data/accounthistory.entity';
-
-/**
- * Interface for rule evaluation results
- */
-export interface EvalResult {
-  isSuspicious: boolean;
-  reason?: string;
-}
+import { RuleEvalResult } from '../../data/rule-eval-result.entity';
 
 /**
  * Threshold amount for suspicious activity detection
@@ -31,17 +24,18 @@ function formatDateToDay(date: Date): string {
  *
  * @param transaction The transaction to check
  * @param history The account history service to check daily totals
- * @returns An EvalResult indicating if the transaction is suspicious and a reason if it is
+ * @returns A RuleEvalResult indicating if the transaction is suspicious and a reason if it is
  */
 export async function suspiciousActivity(
   transaction: Transaction,
   history: AccountHistory
-): Promise<EvalResult> {
+): Promise<RuleEvalResult> {
   // Check if individual transaction amount exceeds threshold
   if (transaction.amount > THRESHOLD) {
     return {
       isSuspicious: true,
       reason: `Transaction amount (${transaction.amount}) exceeds threshold of ${THRESHOLD}`,
+      ruleName: 'suspicious_activity',
     };
   }
 
@@ -57,8 +51,12 @@ export async function suspiciousActivity(
     return {
       isSuspicious: true,
       reason: `Daily total (${newDailyTotal}) for account ${account} on ${day} exceeds threshold of ${THRESHOLD}`,
+      ruleName: 'suspicious_activity',
     };
   }
 
-  return { isSuspicious: false };
+  return { 
+    isSuspicious: false,
+    ruleName: 'suspicious_activity'
+  };
 }

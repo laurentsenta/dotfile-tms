@@ -1,22 +1,22 @@
 import {
-  Injectable,
+  Alert,
+  AlertStatusEnum,
+  Rule,
+  Transaction,
+} from '@dotfile-tms/database';
+import {
   ConflictException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  Transaction,
-  Rule,
-  Alert,
-  AlertStatusEnum,
-} from '@dotfile-tms/database';
+import { TransactionQueueService } from '../rules/transaction-queue.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
-import { TransactionQueueService } from '../rules/transaction-queue.service';
 
 const UNIQUE_CONSTRAINT_VIOLATION_CODE = '23505';
-const DEFAULT_RULE_ID = 'suspicious_activity';
+// Default rule ID is no longer needed as we get the rule name from the evaluation result
 
 @Injectable()
 export class AppService {
@@ -59,14 +59,18 @@ export class AppService {
       // TODO: we have an issue here, we might miss transaction if the process dies between the save and notify.
       this.txQueueService.notifyTransactionCreated({ id: savedTransaction.id });
 
-      const evalResult = await this.ruleEvaluatorService.inspect(savedTransaction);
+      const evalResults = await this.ruleEvaluatorService.inspect(savedTransaction);
 
-      // If suspicious, create an alert
-      if (evalResult.isSuspicious) {
-        await this.createAlertForTransaction(
-          savedTransaction.id,
-          evalResult.reason
-        );
+      // Process each rule evaluation result
+      for (const result of evalResults) {
+        // If suspicious, create an alert
+        if (result.isSuspicious) {
+          await this.createAlertForTransaction(
+            savedTransaction.id,
+            result.ruleName,
+            result.reason
+          );
+        }
       }
 
       return savedTransaction;
@@ -104,16 +108,21 @@ export class AppService {
 
   private async createAlertForTransaction(
     transactionId: string,
+    ruleName?: string,
     reason?: string
   ): Promise<Alert> {
-    // Get the default rule
+    if (!ruleName) {
+      throw new Error('Rule name is required to create an alert');
+    }
+    
+    // Get the rule by name
     const rule = await this.ruleRepository.findOne({
-      where: { name: DEFAULT_RULE_ID },
+      where: { name: ruleName },
     });
 
     if (!rule) {
       throw new NotFoundException(
-        `Default rule '${DEFAULT_RULE_ID}' not found`
+        `Rule '${ruleName}' not found`
       );
     }
 

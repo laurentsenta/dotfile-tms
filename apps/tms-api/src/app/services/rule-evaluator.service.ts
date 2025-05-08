@@ -3,13 +3,18 @@ import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
-import {
-  EvalResult,
-  suspiciousActivity,
-} from '../../domain/rules/suspicious-activity';
+import { RuleEvalResult } from '../../data/rule-eval-result.entity';
+import { suspiciousActivity } from '../../domain/rules/suspicious-activity';
+import { highVelocityTransactions } from '../../domain/rules/high-velocity-transactions';
 import { CreateRuleDto } from '../dto/create-rule.dto';
 
-const DEFAULT_RULE_ID = 'suspicious_activity';
+export const SUSPICIOUS_ACTIVITY_RULE_ID = 'suspicious_activity';
+export const HIGH_VELOCITY_RULE_ID = 'high_velocity_transactions';
+
+export const DEFAULT_RULE_IDS = [
+  SUSPICIOUS_ACTIVITY_RULE_ID,
+  HIGH_VELOCITY_RULE_ID
+];
 
 @Injectable()
 export class RuleEvaluatorService implements OnModuleInit {
@@ -20,7 +25,7 @@ export class RuleEvaluatorService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.createDefaultRuleIfNotExists();
+    await this.createDefaultRulesIfNotExist();
   }
 
   async listAllRules(): Promise<Rule[]> {
@@ -43,29 +48,43 @@ export class RuleEvaluatorService implements OnModuleInit {
   }
 
   /**
-   * Inspects a transaction for suspicious activity
+   * Inspects a transaction for suspicious activity using all available rules
    * @param transaction The transaction to inspect
-   * @returns An EvalResult indicating if the transaction is suspicious
+   * @returns An array of RuleEvalResult indicating if the transaction is suspicious according to any rules
    */
-  async inspect(transaction: Transaction): Promise<EvalResult> {
-    // For now, we only have one rule to check
-    return await suspiciousActivity(transaction, this.accountHistoryService);
+  async inspect(transaction: Transaction): Promise<RuleEvalResult[]> {
+    const results: RuleEvalResult[] = [];
+    
+    // Check suspicious activity rule
+    const suspiciousActivityResult = await suspiciousActivity(transaction, this.accountHistoryService);
+    results.push(suspiciousActivityResult);
+    
+    // Check high velocity transactions rule
+    const highVelocityResult = await highVelocityTransactions(transaction, this.accountHistoryService);
+    results.push(highVelocityResult);
+    
+    return results;
   }
 
-  private async createDefaultRuleIfNotExists(): Promise<void> {
-    // Check if the default rule already exists
-    const defaultRule = await this.ruleRepository.findOne({
-      where: { name: DEFAULT_RULE_ID },
-    });
+  /**
+   * Creates default rules if they don't exist
+   */
+  private async createDefaultRulesIfNotExist(): Promise<void> {
+    for (const ruleName of DEFAULT_RULE_IDS) {
+      // Check if the rule already exists
+      const existingRule = await this.ruleRepository.findOne({
+        where: { name: ruleName },
+      });
 
-    // If the default rule doesn't exist, create it
-    if (!defaultRule) {
-      const rule = new Rule();
-      rule.name = DEFAULT_RULE_ID;
-      await this.ruleRepository.save(rule);
-      console.log(`Created default rule: ${DEFAULT_RULE_ID}`);
-    } else {
-      console.log(`Default rule already exists: ${DEFAULT_RULE_ID}`);
+      // If the rule doesn't exist, create it
+      if (!existingRule) {
+        const rule = new Rule();
+        rule.name = ruleName;
+        await this.ruleRepository.save(rule);
+        console.log(`Created default rule: ${ruleName}`);
+      } else {
+        console.log(`Default rule already exists: ${ruleName}`);
+      }
     }
   }
 }
