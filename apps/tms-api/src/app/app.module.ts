@@ -8,9 +8,9 @@ import { AppService } from './app.service';
 import { RuleEvaluatorService } from './services/rule-evaluator.service';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
 import { GraphqlModule } from '../interfaces/graphql/graphql.module';
-import { MessageQueueModule } from '../database/mq.module';
+import { MessageQueueModule } from '../storage/mq.module';
 import { RulesWorkerModule } from '../rules/rules-worker.module';
-import { RedisModule } from '../database/redis.module';
+import { RedisModule } from '../storage/redis.module';
 import { AccountHistoryRedisService } from '../data/accounthistory.service';
 import { RiskAccountsService } from '../data/risk-accounts.service';
 

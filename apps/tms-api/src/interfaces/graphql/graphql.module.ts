@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from '../../app/app.service';
 import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
-import { RedisModule } from '../../database/redis.module';
+import { RedisModule } from '../../storage/redis.module';
 import { RulesWorkerModule } from '../../rules/rules-worker.module';
 import { AlertResolver } from './resolvers/alert.resolver';
 import { TransactionResolver } from './resolvers/transaction.resolver';

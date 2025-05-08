@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MessageQueueModule } from '../database/mq.module';
+import { MessageQueueModule } from '../storage/mq.module';
 import {
   EvalRulesConsumer,
   TransactionQueueService,

@@ -1,13 +1,15 @@
-import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
+
+const REDIS_HOST = 'localhost'; // TODO: use env variables
+const REDIS_PORT = 6379; // TODO: use env variables
 
 @Module({
   imports: [
-    // TODO: use env variables
     BullModule.forRoot({
       connection: {
-        host: 'localhost',
-        port: 6379,
+        host: REDIS_HOST,
+        port: REDIS_PORT,
       },
     }),
     BullModule.registerQueue({

@@ -7,10 +7,10 @@ import { AppService } from '../../app/app.service';
 import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
-import { RedisModule } from '../../database/redis.module';
+import { RedisModule } from '../../storage/redis.module';
 import { AccountHistoryRedisService } from '../../data/accounthistory.service';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
-import { MessageQueueModule } from '../../database/mq.module';
+import { MessageQueueModule } from '../../storage/mq.module';
 import { RulesWorkerModule } from '../../rules/rules-worker.module';
 
 @Module({
