@@ -2,12 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RulesController } from './rules.controller';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
-import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
-import { TransactionQueueService } from '../../rules/transaction-queue.service';
+import { RulesAggregateService } from '../../data/rules-aggregate.service';
+import { TransactionQueueService } from '../../worker/transaction-queue.service';
 
 describe('RulesController', () => {
   let rulesController: RulesController;
-  let ruleEvaluatorService: RuleEvaluatorService;
+  let ruleEvaluatorService: RulesAggregateService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,7 +38,7 @@ describe('RulesController', () => {
           },
         },
         {
-          provide: RuleEvaluatorService,
+          provide: RulesAggregateService,
           useValue: {
             inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
             listAllRules: jest.fn().mockResolvedValue([]),
@@ -57,7 +57,7 @@ describe('RulesController', () => {
     }).compile();
 
     rulesController = module.get<RulesController>(RulesController);
-    ruleEvaluatorService = module.get<RuleEvaluatorService>(RuleEvaluatorService);
+    ruleEvaluatorService = module.get<RulesAggregateService>(RulesAggregateService);
   });
 
   describe('listAll', () => {

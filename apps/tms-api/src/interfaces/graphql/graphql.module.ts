@@ -3,11 +3,10 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppService } from '../../app/app.service';
-import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
+import { AlertAggregateService } from '../../data/alert-aggregate.service';
 import { RiskAccountsService } from '../../data/risk-accounts.service';
-import { RedisModule } from '../../storage/redis.module';
-import { RulesWorkerModule } from '../../rules/rules-worker.module';
+import { RulesAggregateService } from '../../data/rules-aggregate.service';
+import { RulesEvaluationWorkerModule } from '../../worker/rule-evaluator.module';
 import { AlertResolver } from './resolvers/alert.resolver';
 import { TransactionResolver } from './resolvers/transaction.resolver';
 
@@ -19,14 +18,13 @@ import { TransactionResolver } from './resolvers/transaction.resolver';
       sortSchema: true,
     }),
     TypeOrmModule.forFeature([Transaction, Rule, Alert]),
-    RulesWorkerModule,
-    RedisModule,
+    RulesEvaluationWorkerModule,
   ],
   providers: [
     TransactionResolver,
     AlertResolver,
-    AppService,
-    RuleEvaluatorService,
+    AlertAggregateService,
+    RulesAggregateService,
     RiskAccountsService,
   ],
 })
