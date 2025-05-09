@@ -1,40 +1,19 @@
 import { Module } from '@nestjs/common';
-import { RestController } from './rest.controller';
-import { TransactionsController } from './transactions.controller';
-import { RulesController } from './rules.controller';
+import { ApiDatabaseModule } from '../../storage/database.module';
+import { RulesEvaluationWorkerModule } from '../../worker/rule-evaluator.module';
 import { AlertsController } from './alerts.controller';
-import { AppService } from '../../app/app.service';
-import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Transaction, Rule, Alert } from '@dotfile-tms/database';
-import { RedisModule } from '../../storage/redis.module';
-import { AccountHistoryRedisService } from '../../data/accounthistory.service';
-import { RiskAccountsService } from '../../data/risk-accounts.service';
-import { MessageQueueModule } from '../../storage/mq.module';
-import { RulesWorkerModule } from '../../rules/rules-worker.module';
+import { RestController } from './rest.controller';
+import { RulesController } from './rules.controller';
+import { TransactionsController } from './transactions.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Transaction, Rule, Alert]),
-    RedisModule,
-    MessageQueueModule,
-    RulesWorkerModule,
-  ],
+  imports: [ApiDatabaseModule, RulesEvaluationWorkerModule],
   controllers: [
     RestController,
     TransactionsController,
     RulesController,
     AlertsController,
   ],
-  providers: [
-    AppService,
-    RuleEvaluatorService,
-    AccountHistoryRedisService,
-    RiskAccountsService,
-  ],
-  exports: [
-    AppService,
-    RuleEvaluatorService,
-  ],
+  providers: [],
 })
 export class RestModule {}

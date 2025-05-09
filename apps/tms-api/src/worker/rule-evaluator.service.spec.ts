@@ -1,55 +1,63 @@
-import { Rule, Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
+import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { MockAccountHistory } from '../../data/accounthistory.mock';
-import { AccountHistoryRedisService } from '../../data/accounthistory.service';
-import { MockRiskAccounts } from '../../data/risk-accounts.mock';
-import { RiskAccountsService } from '../../data/risk-accounts.service';
+import { AccountHistory } from '../data/accounthistory.entity';
+import { MockAccountHistory } from '../data/accounthistory.mock';
+import { AlertAggregateService } from '../data/alert-aggregate.service';
+import { MockRiskAccounts } from '../data/risk-accounts.mock';
+import { RiskAccounts } from '../data/risk-accounts.entity';
 import { RuleEvaluatorService } from './rule-evaluator.service';
-import { suspiciousActivity } from '../../domain/rules/suspicious-activity';
-import { highVelocityTransactions } from '../../domain/rules/high-velocity-transactions';
-import { highRiskMerchants } from '../../domain/rules/high-risk-merchants';
-import { dormantAccountActivity } from '../../domain/rules/dormant-account-activity';
-import { evalRules } from '../../domain/rules-evaluator';
+import { evalRules } from '../domain/rules-evaluator';
+import { dormantAccountActivity } from '../domain/rules/dormant-account-activity';
+import { highRiskMerchants } from '../domain/rules/high-risk-merchants';
+import { highVelocityTransactions } from '../domain/rules/high-velocity-transactions';
+import { suspiciousActivity } from '../domain/rules/suspicious-activity';
 
 // Mock the evalRules function
-jest.mock('../../domain/rules-evaluator');
+jest.mock('../domain/rules-evaluator');
 
 describe('RuleEvaluatorService', () => {
   let service: RuleEvaluatorService;
-  let ruleRepository: Repository<Rule>;
+  let alertService: AlertAggregateService;
   let accountHistoryService: MockAccountHistory;
   let riskAccountsService: MockRiskAccounts;
 
   beforeEach(async () => {
     accountHistoryService = new MockAccountHistory();
-    riskAccountsService = new MockRiskAccounts(['risk-account-1', 'risk-account-2']);
+    riskAccountsService = new MockRiskAccounts([
+      'risk-account-1',
+      'risk-account-2',
+    ]);
+
+    // Create mock for AlertAggregateService
+    const mockAlertAggregateService = {
+      createAlertForTransaction: jest.fn().mockResolvedValue({
+        id: 'alert-1',
+        rule: { id: 'rule-1', name: 'suspicious_activity' },
+        transaction: { id: '1' },
+        status: 'NEW',
+      }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RuleEvaluatorService,
         {
-          provide: getRepositoryToken(Rule),
-          useValue: {
-            findOne: jest.fn(),
-            save: jest.fn(),
-            find: jest.fn(),
-          },
+          provide: AlertAggregateService,
+          useValue: mockAlertAggregateService,
         },
         {
-          provide: AccountHistoryRedisService,
+          provide: AccountHistory,
           useValue: accountHistoryService,
         },
         {
-          provide: RiskAccountsService,
+          provide: RiskAccounts,
           useValue: riskAccountsService,
         },
       ],
     }).compile();
 
     service = module.get<RuleEvaluatorService>(RuleEvaluatorService);
-    ruleRepository = module.get<Repository<Rule>>(getRepositoryToken(Rule));
+    alertService = module.get<AlertAggregateService>(AlertAggregateService);
   });
 
   it('should be defined', () => {
@@ -90,11 +98,23 @@ describe('RuleEvaluatorService', () => {
           isSuspicious: false,
         },
       ];
-      
+
       (evalRules as jest.Mock).mockResolvedValue(mockResults);
 
       // Call inspect
       const results = await service.inspect(transaction);
+
+      // Verify createAlertForTransaction was called for suspicious rules
+      expect(alertService.createAlertForTransaction).toHaveBeenCalledWith(
+        transaction.id,
+        suspiciousActivity.id,
+        'Suspicious activity test reason'
+      );
+      expect(alertService.createAlertForTransaction).toHaveBeenCalledWith(
+        transaction.id,
+        highRiskMerchants.id,
+        'Transaction involves a high-risk merchant'
+      );
 
       // Verify evalRules was called with the correct parameters
       expect(evalRules).toHaveBeenCalledWith(
@@ -105,18 +125,20 @@ describe('RuleEvaluatorService', () => {
 
       // Verify the results array contains all rule results
       expect(results).toHaveLength(4);
-      
+
       // Check first result (suspicious activity)
       expect(results[0].isSuspicious).toBe(true);
       expect(results[0].reason).toBe('Suspicious activity test reason');
-      
+
       // Check second result (high velocity)
       expect(results[1].isSuspicious).toBe(false);
-      
+
       // Check third result (high risk merchants)
       expect(results[2].isSuspicious).toBe(true);
-      expect(results[2].reason).toBe('Transaction involves a high-risk merchant');
-      
+      expect(results[2].reason).toBe(
+        'Transaction involves a high-risk merchant'
+      );
+
       // Check fourth result (dormant account activity)
       expect(results[3].isSuspicious).toBe(false);
     });

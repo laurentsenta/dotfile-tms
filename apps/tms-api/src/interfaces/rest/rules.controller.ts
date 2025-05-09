@@ -7,13 +7,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
+import { RulesAggregateService } from '../../data/rules-aggregate.service';
 import { Rule } from '@dotfile-tms/database';
 import { CreateRuleDto } from '../dto/create-rule.dto';
 
 @Controller('/v1/rules')
 export class RulesController {
-  constructor(private readonly ruleEvaluatorService: RuleEvaluatorService) {}
+  constructor(private readonly ruleEvaluatorService: RulesAggregateService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)

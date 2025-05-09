@@ -7,8 +7,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AppService } from '../../../app/app.service';
-import { RuleEvaluatorService } from '../../../app/services/rule-evaluator.service';
+import { AlertAggregateService } from '../../../data/alert-aggregate.service';
+import { RulesAggregateService } from '../../../data/rules-aggregate.service';
+import { TransactionAggregateService } from '../../../data/transaction-aggregate.service';
 import { AlertType } from '../types/alert.type';
 import { RuleType } from '../types/rule.type';
 import { TransactionType } from '../types/transaction.type';
@@ -16,20 +17,21 @@ import { TransactionType } from '../types/transaction.type';
 @Resolver(() => AlertType)
 export class AlertResolver {
   constructor(
-    private readonly appService: AppService,
-    private readonly ruleEvaluatorService: RuleEvaluatorService
+    private readonly alertService: AlertAggregateService,
+    private readonly transactions: TransactionAggregateService,
+    private readonly ruleEvaluatorService: RulesAggregateService
   ) {}
 
   @Query(() => [AlertType])
   async alerts(): Promise<Alert[]> {
-    return this.appService.listAllAlerts();
+    return this.alertService.listAllAlerts();
   }
 
   @Query(() => [AlertType])
   async alertsByTransaction(
     @Args('transactionId', { type: () => ID }) transactionId: string
   ): Promise<Alert[]> {
-    return this.appService.getAlertsByTransactionId(transactionId);
+    return this.alertService.getAlertsByTransactionId(transactionId);
   }
 
   @ResolveField('rule', () => RuleType)
@@ -40,7 +42,7 @@ export class AlertResolver {
   @ResolveField('transaction', () => TransactionType)
   async getTransaction(@Parent() alert: Alert): Promise<Transaction | null> {
     try {
-      const transactions = await this.appService.listAllTransactions();
+      const transactions = await this.transactions.listAllTransactions();
       return transactions.find((tx) => tx.id === alert.transaction.id) || null;
     } catch {
       return null;

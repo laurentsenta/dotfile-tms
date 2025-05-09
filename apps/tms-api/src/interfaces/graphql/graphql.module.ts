@@ -1,13 +1,8 @@
-import { Alert, Rule, Transaction } from '@dotfile-tms/database';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppService } from '../../app/app.service';
-import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
-import { RiskAccountsService } from '../../data/risk-accounts.service';
-import { RedisModule } from '../../storage/redis.module';
-import { RulesWorkerModule } from '../../rules/rules-worker.module';
+import { ApiDatabaseModule } from '../../storage/database.module';
+import { RulesEvaluationWorkerModule } from '../../worker/rule-evaluator.module';
 import { AlertResolver } from './resolvers/alert.resolver';
 import { TransactionResolver } from './resolvers/transaction.resolver';
 
@@ -18,16 +13,9 @@ import { TransactionResolver } from './resolvers/transaction.resolver';
       autoSchemaFile: true, // TODO: re-use join(process.cwd(), 'apps/tms-api/src/schema.gql'), but need to fix the infinite loop when generating schema
       sortSchema: true,
     }),
-    TypeOrmModule.forFeature([Transaction, Rule, Alert]),
-    RulesWorkerModule,
-    RedisModule,
+    ApiDatabaseModule,
+    RulesEvaluationWorkerModule,
   ],
-  providers: [
-    TransactionResolver,
-    AlertResolver,
-    AppService,
-    RuleEvaluatorService,
-    RiskAccountsService,
-  ],
+  providers: [TransactionResolver, AlertResolver],
 })
 export class GraphqlModule {}

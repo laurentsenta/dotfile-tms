@@ -1,17 +1,22 @@
-export interface AccountHistory {
-  incDailyTx(account: string, date: Date, amount: number): Promise<number>;
-  getDailyTxTotal(account: string, date: Date): Promise<number>;
-  incTxCount(
+// Note: using an abstract class, to work around the need to move arounds "symbols" linking to interfaces
+export abstract class AccountHistory {
+  abstract incDailyTx(
+    account: string,
+    date: Date,
+    amount: number
+  ): Promise<number>;
+  abstract getDailyTxTotal(account: string, date: Date): Promise<number>;
+  abstract incTxCount(
     account: string,
     date: Date,
     windowMinutes: number
   ): Promise<number>;
-  getTxCount(
+  abstract getTxCount(
     account: string,
     date: Date,
     windowMinutes: number
   ): Promise<number>;
-  flagActivity(account: string, date: Date): Promise<Date | null>;
-  setWasDormant(account: string, ttl: number): Promise<void>;
-  getWasDormant(account: string): Promise<boolean>;
+  abstract flagActivity(account: string, date: Date): Promise<Date | null>;
+  abstract setWasDormant(account: string, ttl: number): Promise<void>;
+  abstract getWasDormant(account: string): Promise<boolean>;
 }

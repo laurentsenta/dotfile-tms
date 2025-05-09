@@ -1,20 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RestController } from './rest.controller';
-import { AppService } from '../../app/app.service';
+import { TransactionAggregateService } from '../../data/transaction-aggregate.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
-import { RuleEvaluatorService } from '../../app/services/rule-evaluator.service';
-import { TransactionQueueService } from '../../rules/transaction-queue.service';
+import { RulesAggregateService } from '../../data/rules-aggregate.service';
+import { TransactionQueueService } from '../../worker/transaction-queue.service';
 
 describe('RestController', () => {
   let restController: RestController;
-  let appService: AppService;
+  let transactionService: TransactionAggregateService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RestController],
       providers: [
-        AppService,
+        TransactionAggregateService,
         {
           provide: getRepositoryToken(Transaction),
           useValue: {
@@ -40,7 +40,7 @@ describe('RestController', () => {
           },
         },
         {
-          provide: RuleEvaluatorService,
+          provide: RulesAggregateService,
           useValue: {
             inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
             listAllRules: jest.fn().mockResolvedValue([]),
@@ -59,7 +59,7 @@ describe('RestController', () => {
     }).compile();
 
     restController = module.get<RestController>(RestController);
-    appService = module.get<AppService>(AppService);
+    transactionService = module.get<TransactionAggregateService>(TransactionAggregateService);
   });
 
   describe('getMessage', () => {

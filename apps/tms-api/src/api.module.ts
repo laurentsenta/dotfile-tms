@@ -1,15 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ApiDatabaseModule } from './storage/database.module';
-import { RulesWorkerModule } from './rules/rules-worker.module';
-import { RestModule } from './interfaces/rest/rest.module';
 import { GraphqlModule } from './interfaces/graphql/graphql.module';
+import { RestModule } from './interfaces/rest/rest.module';
 
 @Module({
-  imports: [
-    ApiDatabaseModule,
-    RestModule,
-    GraphqlModule,
-    RulesWorkerModule,
-  ],
+  imports: [RestModule, GraphqlModule],
 })
 export class ApiModule {}
