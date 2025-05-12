@@ -3,8 +3,8 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApiDatabaseModule } from '../../storage/database.module';
 import { RulesEvaluationWorkerModule } from '../../worker/rule-evaluator.module';
-import { AlertResolver } from './resolvers/alert.resolver';
-import { TransactionResolver } from './resolvers/transaction.resolver';
+import { AlertResolver } from './alert.resolver';
+import { TransactionResolver } from './transaction.resolver';
 
 @Module({
   imports: [
