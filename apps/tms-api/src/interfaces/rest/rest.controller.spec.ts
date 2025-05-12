@@ -3,8 +3,8 @@ import { RestController } from './rest.controller';
 import { TransactionAggregate } from '../../data/transaction.aggregate';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
-import { RulesAggregateService } from '../../data/rules-aggregate.service';
 import { TransactionQueueService } from '../../worker/transaction-queue.service';
+import { RulesAggregate } from '../../data/rules.aggregate';
 
 describe('RestController', () => {
   let restController: RestController;
@@ -40,7 +40,7 @@ describe('RestController', () => {
           },
         },
         {
-          provide: RulesAggregateService,
+          provide: RulesAggregate,
           useValue: {
             inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
             listAllRules: jest.fn().mockResolvedValue([]),

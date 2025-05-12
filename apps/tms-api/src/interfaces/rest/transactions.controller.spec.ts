@@ -1,10 +1,10 @@
+import { Alert, Rule, Transaction } from '@dotfile-tms/database';
 import { Test, TestingModule } from '@nestjs/testing';
-import { TransactionsController } from './transactions.controller';
-import { TransactionAggregate } from '../../data/transaction.aggregate';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Transaction, Rule, Alert } from '@dotfile-tms/database';
-import { RulesAggregateService } from '../../data/rules-aggregate.service';
+import { RulesAggregate } from '../../data/rules.aggregate';
+import { TransactionAggregate } from '../../data/transaction.aggregate';
 import { TransactionQueueService } from '../../worker/transaction-queue.service';
+import { TransactionsController } from './transactions.controller';
 
 describe('TransactionsController', () => {
   let transactionsController: TransactionsController;
@@ -19,7 +19,11 @@ describe('TransactionsController', () => {
           provide: getRepositoryToken(Transaction),
           useValue: {
             find: jest.fn().mockResolvedValue([]),
-            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'test-id', ...entity })),
+            save: jest
+              .fn()
+              .mockImplementation((entity) =>
+                Promise.resolve({ id: 'test-id', ...entity })
+              ),
             findOne: jest.fn().mockResolvedValue(null),
           },
         },
@@ -28,7 +32,11 @@ describe('TransactionsController', () => {
           useValue: {
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue(null),
-            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'rule-id', ...entity })),
+            save: jest
+              .fn()
+              .mockImplementation((entity) =>
+                Promise.resolve({ id: 'rule-id', ...entity })
+              ),
           },
         },
         {
@@ -36,11 +44,15 @@ describe('TransactionsController', () => {
           useValue: {
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue(null),
-            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
+            save: jest
+              .fn()
+              .mockImplementation((entity) =>
+                Promise.resolve({ id: 'alert-id', ...entity })
+              ),
           },
         },
         {
-          provide: RulesAggregateService,
+          provide: RulesAggregate,
           useValue: {
             inspect: jest.fn().mockReturnValue({ isSuspicious: false }),
             listAllRules: jest.fn().mockResolvedValue([]),
@@ -58,14 +70,18 @@ describe('TransactionsController', () => {
       ],
     }).compile();
 
-    transactionsController = module.get<TransactionsController>(TransactionsController);
+    transactionsController = module.get<TransactionsController>(
+      TransactionsController
+    );
     transactionService = module.get<TransactionAggregate>(TransactionAggregate);
   });
 
   describe('listAll', () => {
     it('should return an array of transactions', async () => {
       const result = [];
-      jest.spyOn(transactionService, 'listAllTransactions').mockImplementation(() => Promise.resolve(result));
+      jest
+        .spyOn(transactionService, 'listAllTransactions')
+        .mockImplementation(() => Promise.resolve(result));
 
       expect(await transactionsController.listAll()).toBe(result);
     });
@@ -82,7 +98,7 @@ describe('TransactionsController', () => {
         currency: 'USD',
         type: 'CREDIT' as any,
       };
-      
+
       const result = {
         id: 'test-id',
         externalId: createTransactionInput.externalId,
@@ -96,10 +112,14 @@ describe('TransactionsController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      
-      jest.spyOn(transactionService, 'createTransaction').mockImplementation(() => Promise.resolve(result as any));
 
-      expect(await transactionsController.createTransaction(createTransactionInput)).toBe(result);
+      jest
+        .spyOn(transactionService, 'createTransaction')
+        .mockImplementation(() => Promise.resolve(result as any));
+
+      expect(
+        await transactionsController.createTransaction(createTransactionInput)
+      ).toBe(result);
     });
   });
 });

@@ -8,7 +8,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AlertAggregate } from '../../../data/alert.aggregate';
-import { RulesAggregateService } from '../../../data/rules-aggregate.service';
+import { RulesAggregate } from '../../../data/rules.aggregate';
 import { TransactionAggregate } from '../../../data/transaction.aggregate';
 import { AlertType } from '../../dto/alert.type';
 import { RuleType } from '../../dto/rule.type';
@@ -19,7 +19,7 @@ export class AlertResolver {
   constructor(
     private readonly alertService: AlertAggregate,
     private readonly transactions: TransactionAggregate,
-    private readonly ruleEvaluatorService: RulesAggregateService
+    private readonly ruleEvaluatorService: RulesAggregate
   ) {}
 
   @Query(() => [AlertType])

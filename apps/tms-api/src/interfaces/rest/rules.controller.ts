@@ -1,10 +1,10 @@
 import { Controller, Get, HttpCode, HttpStatus, Param } from '@nestjs/common';
-import { RulesAggregateService } from '../../data/rules-aggregate.service';
+import { RulesAggregate } from '../../data/rules.aggregate';
 import { RuleType } from '../dto/rule.type';
 
 @Controller('/v1/rules')
 export class RulesController {
-  constructor(private readonly ruleEvaluatorService: RulesAggregateService) {}
+  constructor(private readonly ruleEvaluatorService: RulesAggregate) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
