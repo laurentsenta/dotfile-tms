@@ -2,7 +2,7 @@ import { Transaction } from '@dotfile-tms/database';
 import { Injectable } from '@nestjs/common';
 import { AccountHistoryRepository } from '../data/accounthistory.repository';
 import { AlertAggregateService } from '../data/alert-aggregate.service';
-import { RiskAccounts } from '../data/risk-accounts.entity';
+import { RiskAccountsRepository } from '../data/risk-accounts.repository';
 import { RuleEvalResult } from '../data/rule-eval-result.entity';
 import { evalRules } from '../domain/rules-evaluator';
 
@@ -12,7 +12,7 @@ export class RuleEvaluatorService {
     // private rulesAggregate: RulesAggregate, // Later: use this to query the rules
     private alertAggregateService: AlertAggregateService,
     private accountHistoryService: AccountHistoryRepository,
-    private riskAccountsService: RiskAccounts
+    private riskAccountsService: RiskAccountsRepository
   ) {}
 
   async inspect(transaction: Transaction): Promise<RuleEvalResult[]> {

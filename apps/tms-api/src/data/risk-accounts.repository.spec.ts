@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RiskAccountsService, HIGH_RISK_ACCOUNTS } from './risk-accounts.service';
+import { RiskAccountsRepositoryStatic, HIGH_RISK_ACCOUNTS } from './risk-accounts.repository.impl';
 
 describe('RiskAccountsService', () => {
-  let service: RiskAccountsService;
+  let service: RiskAccountsRepositoryStatic;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RiskAccountsService],
+      providers: [RiskAccountsRepositoryStatic],
     }).compile();
 
-    service = module.get<RiskAccountsService>(RiskAccountsService);
+    service = module.get<RiskAccountsRepositoryStatic>(RiskAccountsRepositoryStatic);
   });
 
   it('should be defined', () => {

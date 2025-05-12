@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RiskAccounts } from './risk-accounts.entity';
+import { RiskAccountsRepository } from './risk-accounts.repository';
 
 /**
  * List of high-risk merchant accounts
@@ -24,7 +24,7 @@ export const HIGH_RISK_ACCOUNTS = [
  * Uses a hardcoded list of high-risk merchant accounts
  */
 @Injectable()
-export class RiskAccountsService implements RiskAccounts {
+export class RiskAccountsRepositoryStatic implements RiskAccountsRepository {
   private riskAccounts: Set<string>;
 
   constructor() {

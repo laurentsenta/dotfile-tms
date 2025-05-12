@@ -1,11 +1,11 @@
 import { Transaction } from '@dotfile-tms/database';
 import { AccountHistoryRepositoryMock } from '../../data/accounthistory.repository.mock';
-import { MockRiskAccounts } from '../../data/risk-accounts.mock';
+import { RiskAccountsRepositoryMock } from '../../data/risk-accounts.repository.mock';
 import { dormantAccountActivity } from './dormant-account-activity';
 
 describe('dormantAccountActivity', () => {
   let history: AccountHistoryRepositoryMock;
-  let riskAccounts: MockRiskAccounts;
+  let riskAccounts: RiskAccountsRepositoryMock;
   let transaction: Transaction;
 
   const sourceAccount = 'account123';
@@ -14,7 +14,7 @@ describe('dormantAccountActivity', () => {
 
   beforeEach(() => {
     history = new AccountHistoryRepositoryMock();
-    riskAccounts = new MockRiskAccounts();
+    riskAccounts = new RiskAccountsRepositoryMock();
 
     transaction = {
       id: '1',

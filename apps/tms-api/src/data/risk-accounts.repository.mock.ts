@@ -1,9 +1,9 @@
-import { RiskAccounts } from "./risk-accounts.entity";
+import { RiskAccountsRepository } from './risk-accounts.repository';
 
 /**
- * In-memory implementation of RiskAccounts for testing
+ * In-memory & mutable implementation of RiskAccounts for testing
  */
-export class MockRiskAccounts implements RiskAccounts {
+export class RiskAccountsRepositoryMock implements RiskAccountsRepository {
   private riskAccounts: Set<string>;
 
   constructor(accounts: string[] = []) {

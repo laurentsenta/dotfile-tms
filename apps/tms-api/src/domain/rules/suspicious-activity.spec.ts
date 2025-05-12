@@ -1,16 +1,16 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { AccountHistoryRepositoryMock } from '../../data/accounthistory.repository.mock';
-import { MockRiskAccounts } from '../../data/risk-accounts.mock';
+import { RiskAccountsRepositoryMock } from '../../data/risk-accounts.repository.mock';
 import { suspiciousActivity } from './suspicious-activity';
 import { toDate } from 'date-fns';
 
 describe('suspiciousActivity', () => {
   let history: AccountHistoryRepositoryMock;
-  let riskAccounts: MockRiskAccounts;
+  let riskAccounts: RiskAccountsRepositoryMock;
 
   beforeEach(() => {
     history = new AccountHistoryRepositoryMock();
-    riskAccounts = new MockRiskAccounts();
+    riskAccounts = new RiskAccountsRepositoryMock();
   });
 
   describe('Single transaction checks', () => {

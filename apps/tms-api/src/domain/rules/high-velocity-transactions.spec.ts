@@ -1,15 +1,15 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { AccountHistoryRepositoryMock } from '../../data/accounthistory.repository.mock';
-import { MockRiskAccounts } from '../../data/risk-accounts.mock';
+import { RiskAccountsRepositoryMock } from '../../data/risk-accounts.repository.mock';
 import { highVelocityTransactions } from './high-velocity-transactions';
 
 describe('highVelocityTransactions', () => {
   let history: AccountHistoryRepositoryMock;
-  let riskAccounts: MockRiskAccounts;
+  let riskAccounts: RiskAccountsRepositoryMock;
 
   beforeEach(() => {
     history = new AccountHistoryRepositoryMock();
-    riskAccounts = new MockRiskAccounts();
+    riskAccounts = new RiskAccountsRepositoryMock();
   });
 
   it('should return isSuspicious=false for the first few transactions within the time window', async () => {

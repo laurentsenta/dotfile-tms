@@ -1,14 +1,14 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { AccountHistoryRepositoryMock } from '../../data/accounthistory.repository.mock';
-import { MockRiskAccounts } from '../../data/risk-accounts.mock';
+import { RiskAccountsRepositoryMock } from '../../data/risk-accounts.repository.mock';
 import { highRiskMerchants } from './high-risk-merchants';
 
 describe('highRiskMerchants', () => {
-  let riskAccounts: MockRiskAccounts;
+  let riskAccounts: RiskAccountsRepositoryMock;
   let history: AccountHistoryRepositoryMock;
 
   beforeEach(() => {
-    riskAccounts = new MockRiskAccounts([
+    riskAccounts = new RiskAccountsRepositoryMock([
       'merchant-gambling-001',
       'merchant-crypto-exchange-001',
       'merchant-offshore-001',

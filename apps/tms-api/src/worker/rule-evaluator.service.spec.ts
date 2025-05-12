@@ -3,8 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AccountHistoryRepository } from '../data/accounthistory.repository';
 import { AccountHistoryRepositoryMock } from '../data/accounthistory.repository.mock';
 import { AlertAggregateService } from '../data/alert-aggregate.service';
-import { RiskAccounts } from '../data/risk-accounts.entity';
-import { MockRiskAccounts } from '../data/risk-accounts.mock';
+import { RiskAccountsRepository } from '../data/risk-accounts.repository';
+import { RiskAccountsRepositoryMock } from '../data/risk-accounts.repository.mock';
 import { evalRules } from '../domain/rules-evaluator';
 import { dormantAccountActivity } from '../domain/rules/dormant-account-activity';
 import { highRiskMerchants } from '../domain/rules/high-risk-merchants';
@@ -19,11 +19,11 @@ describe('RuleEvaluatorService', () => {
   let service: RuleEvaluatorService;
   let alertService: AlertAggregateService;
   let accountHistoryMock: AccountHistoryRepositoryMock;
-  let riskAccountsMock: MockRiskAccounts;
+  let riskAccountsMock: RiskAccountsRepositoryMock;
 
   beforeEach(async () => {
     accountHistoryMock = new AccountHistoryRepositoryMock();
-    riskAccountsMock = new MockRiskAccounts([
+    riskAccountsMock = new RiskAccountsRepositoryMock([
       'risk-account-1',
       'risk-account-2',
     ]);
@@ -50,7 +50,7 @@ describe('RuleEvaluatorService', () => {
           useValue: accountHistoryMock,
         },
         {
-          provide: RiskAccounts,
+          provide: RiskAccountsRepository,
           useValue: riskAccountsMock,
         },
       ],
