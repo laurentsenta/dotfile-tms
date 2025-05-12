@@ -9,6 +9,7 @@ import {
 import { RedisModule } from '../storage/redis.module';
 
 // Later: split this into a separate app that we can scale horizontally
+// worker & api will need to share the TransactionQueueService only.
 @Module({
   imports: [ApiDatabaseModule, MessageQueueModule, RedisModule],
   providers: [RuleEvaluatorService, EvalRulesConsumer, TransactionQueueService],

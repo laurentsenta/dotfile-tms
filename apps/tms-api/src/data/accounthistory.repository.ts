@@ -1,4 +1,4 @@
-// Note: using an abstract class, to work around the need to move arounds "symbols" linking to interfaces
+// Note: Using an interface and moving around Symbols would be possible.
 export abstract class AccountHistoryRepository {
   abstract incDailyTx(
     account: string,

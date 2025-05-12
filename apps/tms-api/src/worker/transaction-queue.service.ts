@@ -1,7 +1,7 @@
 import { Transaction } from '@dotfile-tms/database';
-import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { Job, Queue } from 'bullmq';
+import { Job } from 'bullmq';
 import { RuleEvaluatorService } from './rule-evaluator.service';
 
 interface TransactionReference {
@@ -11,8 +11,6 @@ interface TransactionReference {
 @Injectable()
 export class TransactionQueueService {
   constructor(
-    @InjectQueue('transactions')
-    private readonly queue: Queue,
     private readonly evaluator: RuleEvaluatorService
   ) {}
 
@@ -20,7 +18,8 @@ export class TransactionQueueService {
     // Later: switch to an async mode, use the message queue to notify
     // workers to process the transaction.
     // You could even return a second async structure (promise, or observable)
-    // that resolves once the transaction is fully processed.
+    // that resolves once the transaction is fully processed if the user requests a
+    // "blocking" ingestion.
 
     // this.queue.add('eval-rules', transaction, {
     //   jobId: transaction.id,
