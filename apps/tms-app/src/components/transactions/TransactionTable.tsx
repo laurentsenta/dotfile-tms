@@ -1,10 +1,26 @@
 import {
-  Table,
-  Box,
-  Text,
   Badge,
+  Box,
   Card,
+  Flex,
+  IconButton,
+  Input,
+  Menu,
+  Table,
+  Text,
 } from '@chakra-ui/react';
+import {
+  ColumnFiltersState,
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from '@tanstack/react-table';
+import { useMemo, useState } from 'react';
+import { FaFilter, FaSort, FaSortDown, FaSortUp } from 'react-icons/fa';
 
 // Define types for our data
 interface Rule {
@@ -36,10 +52,101 @@ interface TransactionTableProps {
   isLoading?: boolean;
 }
 
-export default function TransactionTable({ 
-  transactions, 
-  isLoading = false 
+export default function TransactionTable({
+  transactions,
+  isLoading = false,
 }: TransactionTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  const columnHelper = createColumnHelper<Transaction>();
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('externalId', {
+        header: 'ID',
+        cell: (info) => info.getValue(),
+        enableSorting: true,
+        enableColumnFilter: true,
+      }),
+      columnHelper.accessor('date', {
+        header: 'Date',
+        cell: (info) => new Date(info.getValue()).toLocaleString(),
+        enableSorting: true,
+        enableColumnFilter: true,
+        sortingFn: (rowA, rowB, columnId) => {
+          const dateA = new Date(rowA.original.date).getTime();
+          const dateB = new Date(rowB.original.date).getTime();
+          return dateA < dateB ? -1 : dateA > dateB ? 1 : 0;
+        },
+      }),
+      columnHelper.accessor((row) => `${row.amount} ${row.currency}`, {
+        id: 'amount',
+        header: 'Amount',
+        cell: (info) => info.getValue(),
+        enableSorting: true,
+        enableColumnFilter: true,
+        sortingFn: (rowA, rowB, columnId) => {
+          return rowA.original.amount < rowB.original.amount
+            ? -1
+            : rowA.original.amount > rowB.original.amount
+            ? 1
+            : 0;
+        },
+      }),
+      columnHelper.accessor('type', {
+        header: 'Type',
+        cell: (info) => info.getValue(),
+        enableSorting: true,
+        enableColumnFilter: true,
+      }),
+      columnHelper.accessor('sourceAccountKey', {
+        header: 'Source',
+        cell: (info) => info.getValue() || '-',
+        enableSorting: true,
+        enableColumnFilter: true,
+      }),
+      columnHelper.accessor('targetAccountKey', {
+        header: 'Target',
+        cell: (info) => info.getValue() || '-',
+        enableSorting: true,
+        enableColumnFilter: true,
+      }),
+      columnHelper.accessor((row) => row.alerts?.length || 0, {
+        id: 'alerts',
+        header: 'Alerts',
+        cell: (info) => {
+          const alertCount = info.getValue();
+          return alertCount > 0 ? (
+            <Badge colorScheme="red">{alertCount} Alert(s)</Badge>
+          ) : (
+            <Badge colorScheme="green">No Alerts</Badge>
+          );
+        },
+        enableSorting: true,
+        enableColumnFilter: false,
+      }),
+    ],
+    [columnHelper]
+  );
+
+  const table = useReactTable({
+    data: transactions,
+    columns,
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
   if (isLoading) {
     return <Text>Loading transactions...</Text>;
   }
@@ -51,42 +158,105 @@ export default function TransactionTable({
   return (
     <Card.Root>
       <Card.Header>
-        <Text fontSize="lg" fontWeight="medium">Transactions</Text>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Text fontSize="lg" fontWeight="medium">
+            Transactions
+          </Text>
+          <Box>
+            <Input
+              placeholder="Search all columns..."
+              value={globalFilter ?? ''}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              size="sm"
+              width="300px"
+            />
+          </Box>
+        </Flex>
       </Card.Header>
       <Card.Body>
         <Box overflowX="auto">
           <Table.Root>
             <Table.Header>
-              <Table.Row>
-                <Table.Cell as="th">ID</Table.Cell>
-                <Table.Cell as="th">Date</Table.Cell>
-                <Table.Cell as="th">Amount</Table.Cell>
-                <Table.Cell as="th">Type</Table.Cell>
-                <Table.Cell as="th">Source</Table.Cell>
-                <Table.Cell as="th">Target</Table.Cell>
-                <Table.Cell as="th">Alerts</Table.Cell>
-              </Table.Row>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Table.Row key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Table.Cell as="th" key={header.id}>
+                      {header.isPlaceholder ? null : (
+                        <Flex alignItems="center">
+                          <Box
+                            cursor={
+                              header.column.getCanSort() ? 'pointer' : 'default'
+                            }
+                            onClick={header.column.getToggleSortingHandler()}
+                            flex="1"
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                          </Box>
+                          {header.column.getCanSort() && (
+                            <Box ml={1}>
+                              {header.column.getIsSorted() === 'asc' ? (
+                                <FaSortUp />
+                              ) : header.column.getIsSorted() === 'desc' ? (
+                                <FaSortDown />
+                              ) : (
+                                <FaSort color="gray" />
+                              )}
+                            </Box>
+                          )}
+                          {header.column.getCanFilter() && (
+                            <Menu.Root>
+                              <Menu.Trigger asChild>
+                                <IconButton
+                                  aria-label="Filter"
+                                  variant="ghost"
+                                  size="xs"
+                                  ml={2}
+                                >
+                                  <FaFilter />
+                                </IconButton>
+                              </Menu.Trigger>
+                              <Menu.Positioner>
+                                <Menu.Content>
+                                  <Box p={2}>
+                                    <Input
+                                      placeholder={`Filter ${header.column.columnDef.header}...`}
+                                      value={
+                                        (header.column.getFilterValue() as string) ??
+                                        ''
+                                      }
+                                      onChange={(e) =>
+                                        header.column.setFilterValue(
+                                          e.target.value
+                                        )
+                                      }
+                                      size="sm"
+                                    />
+                                  </Box>
+                                </Menu.Content>
+                              </Menu.Positioner>
+                            </Menu.Root>
+                          )}
+                        </Flex>
+                      )}
+                    </Table.Cell>
+                  ))}
+                </Table.Row>
+              ))}
             </Table.Header>
             <Table.Body>
-              {transactions.map((transaction) => (
-                <Table.Row key={transaction.id}>
-                  <Table.Cell>{transaction.externalId}</Table.Cell>
-                  <Table.Cell>{new Date(transaction.date).toLocaleString()}</Table.Cell>
-                  <Table.Cell>
-                    {transaction.amount} {transaction.currency}
-                  </Table.Cell>
-                  <Table.Cell>{transaction.type}</Table.Cell>
-                  <Table.Cell>{transaction.sourceAccountKey || '-'}</Table.Cell>
-                  <Table.Cell>{transaction.targetAccountKey || '-'}</Table.Cell>
-                  <Table.Cell>
-                    {transaction.alerts && transaction.alerts.length > 0 ? (
-                      <Badge colorScheme="red">
-                        {transaction.alerts.length} Alert(s)
-                      </Badge>
-                    ) : (
-                      <Badge colorScheme="green">No Alerts</Badge>
-                    )}
-                  </Table.Cell>
+              {table.getRowModel().rows.map((row) => (
+                <Table.Row key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <Table.Cell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </Table.Cell>
+                  ))}
                 </Table.Row>
               ))}
             </Table.Body>
