@@ -73,20 +73,25 @@ describe('TransactionsController', () => {
 
   describe('createTransaction', () => {
     it('should create a transaction', async () => {
-      const createTransactionDto = {
-        external_id: 'test-external-id',
+      const createTransactionInput = {
+        externalId: 'test-external-id',
         date: new Date().toISOString(),
-        source_account_key: 'source',
-        target_account_key: 'target',
+        sourceAccountKey: 'source',
+        targetAccountKey: 'target',
         amount: 100,
         currency: 'USD',
         type: 'CREDIT' as any,
-        metadata: {},
       };
       
       const result = {
         id: 'test-id',
-        ...createTransactionDto,
+        externalId: createTransactionInput.externalId,
+        date: new Date(createTransactionInput.date),
+        sourceAccountKey: createTransactionInput.sourceAccountKey,
+        targetAccountKey: createTransactionInput.targetAccountKey,
+        amount: createTransactionInput.amount,
+        currency: createTransactionInput.currency,
+        type: createTransactionInput.type,
         processedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -94,7 +99,7 @@ describe('TransactionsController', () => {
       
       jest.spyOn(transactionService, 'createTransaction').mockImplementation(() => Promise.resolve(result as any));
 
-      expect(await transactionsController.createTransaction(createTransactionDto)).toBe(result);
+      expect(await transactionsController.createTransaction(createTransactionInput)).toBe(result);
     });
   });
 });

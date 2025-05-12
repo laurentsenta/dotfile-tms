@@ -2,7 +2,7 @@ import { Transaction } from '@dotfile-tms/database';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateTransactionDto } from '../interfaces/dto/create-transaction.dto';
+import { CreateTransactionInput } from '../interfaces/dto/create-transaction.input';
 
 const UNIQUE_CONSTRAINT_VIOLATION_CODE = '23505';
 
@@ -18,18 +18,17 @@ export class TransactionAggregate {
   }
 
   async createTransaction(
-    createTransactionDto: CreateTransactionDto
+    createTransaction: CreateTransactionInput
   ): Promise<Transaction> {
     // Map DTO to entity
     const transaction = new Transaction();
-    transaction.externalId = createTransactionDto.external_id;
-    transaction.date = new Date(createTransactionDto.date);
-    transaction.sourceAccountKey = createTransactionDto.source_account_key;
-    transaction.targetAccountKey = createTransactionDto.target_account_key;
-    transaction.amount = createTransactionDto.amount;
-    transaction.currency = createTransactionDto.currency;
-    transaction.type = createTransactionDto.type;
-    transaction.metadata = createTransactionDto.metadata;
+    transaction.externalId = createTransaction.externalId;
+    transaction.date = new Date(createTransaction.date);
+    transaction.sourceAccountKey = createTransaction.sourceAccountKey;
+    transaction.targetAccountKey = createTransaction.targetAccountKey;
+    transaction.amount = createTransaction.amount;
+    transaction.currency = createTransaction.currency;
+    transaction.type = createTransaction.type;
 
     transaction.processedAt = new Date();
 
@@ -45,7 +44,7 @@ export class TransactionAggregate {
         error.detail?.includes('external_id')
       ) {
         throw new ConflictException(
-          `Transaction with external_id '${createTransactionDto.external_id}' already exists`
+          `Transaction with external_id '${createTransaction.externalId}' already exists`
         );
       }
       if (error.code === UNIQUE_CONSTRAINT_VIOLATION_CODE) {

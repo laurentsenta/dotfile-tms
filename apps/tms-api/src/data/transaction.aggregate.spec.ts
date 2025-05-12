@@ -3,7 +3,7 @@ import { ConflictException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { CreateTransactionDto } from '../interfaces/dto/create-transaction.dto';
+import { CreateTransactionInput } from '../interfaces/dto/create-transaction.input';
 import { RuleEvaluatorService } from '../worker/rule-evaluator.service';
 import { TransactionQueueService } from '../worker/transaction-queue.service';
 import { TransactionAggregate } from './transaction.aggregate';
@@ -67,38 +67,36 @@ describe('TransactionAggregateService', () => {
 
   describe('createTransaction', () => {
     it('should create a transaction, set processed_at, and notify transaction queue', async () => {
-      const createTransactionDto: CreateTransactionDto = {
-        external_id: 'test-external-id',
+      const createTransactionInput: CreateTransactionInput = {
+        externalId: 'test-external-id',
         date: new Date().toISOString(),
-        source_account_key: 'source',
-        target_account_key: 'target',
+        sourceAccountKey: 'source',
+        targetAccountKey: 'target',
         amount: 100,
         currency: 'USD',
         type: TransactionTypeEnum.CREDIT,
-        metadata: {},
       };
 
-      const result = await service.createTransaction(createTransactionDto);
+      const result = await service.createTransaction(createTransactionInput);
 
       expect(result).toHaveProperty('id', 'test-id');
       expect(result).toHaveProperty(
         'externalId',
-        createTransactionDto.external_id
+        createTransactionInput.externalId
       );
       expect(result).toHaveProperty('processedAt');
       expect(mockTransactionRepository.save).toHaveBeenCalled();
     });
 
     it('should throw ConflictException when transaction with same external_id exists', async () => {
-      const createTransactionDto: CreateTransactionDto = {
-        external_id: 'test-external-id',
+      const createTransactionInput: CreateTransactionInput = {
+        externalId: 'test-external-id',
         date: new Date().toISOString(),
-        source_account_key: 'source',
-        target_account_key: 'target',
+        sourceAccountKey: 'source',
+        targetAccountKey: 'target',
         amount: 100,
         currency: 'USD',
         type: TransactionTypeEnum.CREDIT,
-        metadata: {},
       };
 
       // Mock the repository to throw a unique constraint violation error
@@ -107,22 +105,21 @@ describe('TransactionAggregateService', () => {
         detail: 'Key (external_id)=(test-external-id) already exists',
       });
 
-      await expect(service.createTransaction(createTransactionDto)).rejects.toThrow(
+      await expect(service.createTransaction(createTransactionInput)).rejects.toThrow(
         ConflictException
       );
       expect(mockTransactionRepository.save).toHaveBeenCalled();
     });
 
     it('should throw ConflictException for other unique constraint violations', async () => {
-      const createTransactionDto: CreateTransactionDto = {
-        external_id: 'test-external-id',
+      const createTransactionInput: CreateTransactionInput = {
+        externalId: 'test-external-id',
         date: new Date().toISOString(),
-        source_account_key: 'source',
-        target_account_key: 'target',
+        sourceAccountKey: 'source',
+        targetAccountKey: 'target',
         amount: 100,
         currency: 'USD',
         type: TransactionTypeEnum.CREDIT,
-        metadata: {},
       };
 
       // Mock the repository to throw a unique constraint violation error without detail
@@ -130,29 +127,28 @@ describe('TransactionAggregateService', () => {
         code: '23505',
       });
 
-      await expect(service.createTransaction(createTransactionDto)).rejects.toThrow(
+      await expect(service.createTransaction(createTransactionInput)).rejects.toThrow(
         ConflictException
       );
       expect(mockTransactionRepository.save).toHaveBeenCalled();
     });
 
     it('should rethrow other errors', async () => {
-      const createTransactionDto: CreateTransactionDto = {
-        external_id: 'test-external-id',
+      const createTransactionInput: CreateTransactionInput = {
+        externalId: 'test-external-id',
         date: new Date().toISOString(),
-        source_account_key: 'source',
-        target_account_key: 'target',
+        sourceAccountKey: 'source',
+        targetAccountKey: 'target',
         amount: 100,
         currency: 'USD',
         type: TransactionTypeEnum.CREDIT,
-        metadata: {},
       };
 
       // Mock the repository to throw a different error
       const error = new Error('Database connection error');
       mockTransactionRepository.save.mockRejectedValue(error);
 
-      await expect(service.createTransaction(createTransactionDto)).rejects.toThrow(error);
+      await expect(service.createTransaction(createTransactionInput)).rejects.toThrow(error);
       expect(mockTransactionRepository.save).toHaveBeenCalled();
     });
   });

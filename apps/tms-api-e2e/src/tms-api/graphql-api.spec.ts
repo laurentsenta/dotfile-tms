@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { create } from 'domain';
 
 interface GraphQLResponse<T> {
   data: T;
@@ -65,10 +64,10 @@ describe('GraphQL API', () => {
   async function createTestTransactions() {
     // Create a normal transaction
     const normalTx = {
-      external_id: 'graphql-test-normal',
+      externalId: 'graphql-test-normal',
       date: new Date().toISOString(),
-      source_account_key: 'source_account',
-      target_account_key: 'target_account',
+      sourceAccountKey: 'source_account',
+      targetAccountKey: 'target_account',
       amount: 100 * CENTS,
       currency: 'USD',
       type: 'TRANSFER',
@@ -76,10 +75,10 @@ describe('GraphQL API', () => {
 
     // Create a suspicious transaction (high amount)
     const suspiciousTx = {
-      external_id: 'graphql-test-suspicious',
+      externalId: 'graphql-test-suspicious',
       date: new Date().toISOString(),
-      source_account_key: 'source_account',
-      target_account_key: 'target_account',
+      sourceAccountKey: 'source_account',
+      targetAccountKey: 'target_account',
       amount: 15000 * CENTS,
       currency: 'USD',
       type: 'TRANSFER',

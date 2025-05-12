@@ -1,6 +1,6 @@
-import { Alert } from '@dotfile-tms/database';
 import { Controller, Get, HttpCode, HttpStatus, Param } from '@nestjs/common';
 import { AlertAggregate } from '../../data/alert.aggregate';
+import { AlertType } from '../dto/alert.type';
 
 @Controller('/v1/alerts')
 export class AlertsController {
@@ -8,13 +8,13 @@ export class AlertsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  listAll(): Promise<Alert[]> {
+  listAll(): Promise<AlertType[]> {
     return this.alertService.listAllAlerts();
   }
 
   @Get('transaction/:id')
   @HttpCode(HttpStatus.OK)
-  getByTransactionId(@Param('id') id: string): Promise<Alert[]> {
+  getByTransactionId(@Param('id') id: string): Promise<AlertType[]> {
     return this.alertService.getAlertsByTransactionId(id);
   }
 }

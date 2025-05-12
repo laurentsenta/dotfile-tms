@@ -8,8 +8,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { TransactionAggregate } from '../../data/transaction.aggregate';
-import { CreateTransactionDto } from '../dto/create-transaction.dto';
 import { TransactionQueueService } from '../../worker/transaction-queue.service';
+import { CreateTransactionInput } from '../dto/create-transaction.input';
 
 @Controller('/v1/transactions')
 export class TransactionsController {
@@ -27,11 +27,11 @@ export class TransactionsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createTransaction(
-    @Body() createTransactionDto: CreateTransactionDto
+    @Body() createTransaction: CreateTransactionInput
   ): Promise<Transaction> {
     // Later: implement a notification system and two-step commit or crash recovery
     const created = await this.transactions.createTransaction(
-      createTransactionDto
+      createTransaction
     );
     await this.queue.notifyTransactionCreated(created);
     return created;

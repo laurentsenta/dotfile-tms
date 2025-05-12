@@ -3,13 +3,17 @@ import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DEFAULT_RULES } from '../domain/rules-evaluator';
-import { CreateRuleDto } from '../interfaces/dto/create-rule.dto';
+
+// Local until we expose this in the APIs
+interface CreateRuleDto {
+  name: string;
+}
 
 @Injectable()
 export class RulesAggregateService implements OnModuleInit {
   constructor(
     @InjectRepository(Rule)
-    private ruleRepository: Repository<Rule>,
+    private ruleRepository: Repository<Rule>
   ) {}
 
   async onModuleInit() {

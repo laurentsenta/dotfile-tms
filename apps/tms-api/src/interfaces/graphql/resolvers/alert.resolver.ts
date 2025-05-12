@@ -10,9 +10,9 @@ import {
 import { AlertAggregate } from '../../../data/alert.aggregate';
 import { RulesAggregateService } from '../../../data/rules-aggregate.service';
 import { TransactionAggregate } from '../../../data/transaction.aggregate';
-import { AlertType } from '../types/alert.type';
-import { RuleType } from '../types/rule.type';
-import { TransactionType } from '../types/transaction.type';
+import { AlertType } from '../../dto/alert.type';
+import { RuleType } from '../../dto/rule.type';
+import { TransactionType } from '../../dto/transaction.type';
 
 @Resolver(() => AlertType)
 export class AlertResolver {

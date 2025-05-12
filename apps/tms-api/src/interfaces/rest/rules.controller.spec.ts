@@ -1,9 +1,9 @@
+import { Alert, Rule, Transaction } from '@dotfile-tms/database';
 import { Test, TestingModule } from '@nestjs/testing';
-import { RulesController } from './rules.controller';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Transaction, Rule, Alert } from '@dotfile-tms/database';
 import { RulesAggregateService } from '../../data/rules-aggregate.service';
 import { TransactionQueueService } from '../../worker/transaction-queue.service';
+import { RulesController } from './rules.controller';
 
 describe('RulesController', () => {
   let rulesController: RulesController;
@@ -17,7 +17,11 @@ describe('RulesController', () => {
           provide: getRepositoryToken(Transaction),
           useValue: {
             find: jest.fn().mockResolvedValue([]),
-            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'test-id', ...entity })),
+            save: jest
+              .fn()
+              .mockImplementation((entity) =>
+                Promise.resolve({ id: 'test-id', ...entity })
+              ),
             findOne: jest.fn().mockResolvedValue(null),
           },
         },
@@ -26,7 +30,11 @@ describe('RulesController', () => {
           useValue: {
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue(null),
-            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'rule-id', ...entity })),
+            save: jest
+              .fn()
+              .mockImplementation((entity) =>
+                Promise.resolve({ id: 'rule-id', ...entity })
+              ),
           },
         },
         {
@@ -34,7 +42,11 @@ describe('RulesController', () => {
           useValue: {
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue(null),
-            save: jest.fn().mockImplementation(entity => Promise.resolve({ id: 'alert-id', ...entity })),
+            save: jest
+              .fn()
+              .mockImplementation((entity) =>
+                Promise.resolve({ id: 'alert-id', ...entity })
+              ),
           },
         },
         {
@@ -57,13 +69,17 @@ describe('RulesController', () => {
     }).compile();
 
     rulesController = module.get<RulesController>(RulesController);
-    ruleEvaluatorService = module.get<RulesAggregateService>(RulesAggregateService);
+    ruleEvaluatorService = module.get<RulesAggregateService>(
+      RulesAggregateService
+    );
   });
 
   describe('listAll', () => {
     it('should return an array of rules', async () => {
       const result = [];
-      jest.spyOn(ruleEvaluatorService, 'listAllRules').mockImplementation(() => Promise.resolve(result));
+      jest
+        .spyOn(ruleEvaluatorService, 'listAllRules')
+        .mockImplementation(() => Promise.resolve(result));
 
       expect(await rulesController.listAll()).toBe(result);
     });
@@ -72,28 +88,11 @@ describe('RulesController', () => {
   describe('getByName', () => {
     it('should return a rule by name', async () => {
       const result = { id: 'rule-id', name: 'test-rule' };
-      jest.spyOn(ruleEvaluatorService, 'getRuleByName').mockImplementation(() => Promise.resolve(result as any));
+      jest
+        .spyOn(ruleEvaluatorService, 'getRuleByName')
+        .mockImplementation(() => Promise.resolve(result as any));
 
       expect(await rulesController.getByName('test-rule')).toBe(result);
-    });
-  });
-
-  describe('createRule', () => {
-    it('should create a rule', async () => {
-      const createRuleDto = {
-        name: 'test-rule',
-      };
-      
-      const result = {
-        id: 'rule-id',
-        ...createRuleDto,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      jest.spyOn(ruleEvaluatorService, 'createRule').mockImplementation(() => Promise.resolve(result as any));
-
-      expect(await rulesController.createRule(createRuleDto)).toBe(result);
     });
   });
 });
