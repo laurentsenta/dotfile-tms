@@ -16,7 +16,6 @@ export class TransactionQueueService {
     private readonly evaluator: RuleEvaluatorService
   ) {}
 
-  // Note: This is a weak point I haven't figured out we should expose to the rest of the app yet. This feels leaky.
   async notifyTransactionCreated(transaction: Transaction) {
     // Later: switch to an async mode, use the message queue to notify
     // workers to process the transaction.
