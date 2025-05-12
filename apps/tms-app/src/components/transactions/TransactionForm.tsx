@@ -195,7 +195,7 @@ export default function TransactionForm({
             date: new Date(formValues.date).toISOString(),
             sourceAccountKey: formValues.sourceAccountKey || undefined,
             targetAccountKey: formValues.targetAccountKey || undefined,
-            amount: formValues.amount,
+            amount: formValues.amount * 100,
             currency: formValues.currency,
             type: formValues.type,
           },

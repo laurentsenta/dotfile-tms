@@ -81,7 +81,7 @@ export default function TransactionTable({
           return dateA < dateB ? -1 : dateA > dateB ? 1 : 0;
         },
       }),
-      columnHelper.accessor((row) => `${row.amount} ${row.currency}`, {
+      columnHelper.accessor((row) => `${(row.amount / 100).toFixed(2)} ${row.currency}`, {
         id: 'amount',
         header: 'Amount',
         cell: (info) => info.getValue(),
