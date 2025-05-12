@@ -1,10 +1,11 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { TransactionTypeEnum } from '@dotfile-tms/database';
-import './enums';
+import { TransactionType as TransactionTypeShared } from '@dotfile-tms/interfaces';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { AlertType } from './alert.type';
+import './enums';
 
 @ObjectType()
-export class TransactionType {
+export class TransactionType implements TransactionTypeShared {
   @Field(() => ID)
   id: string;
 

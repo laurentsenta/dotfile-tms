@@ -9,6 +9,7 @@ import {
   Table,
   Text,
 } from '@chakra-ui/react';
+import { TransactionType } from '@dotfile-tms/interfaces';
 import {
   ColumnFiltersState,
   createColumnHelper,
@@ -22,33 +23,8 @@ import {
 import { useMemo, useState } from 'react';
 import { FaFilter, FaSort, FaSortDown, FaSortUp } from 'react-icons/fa';
 
-// Define types for our data
-interface Rule {
-  id: string;
-  name: string;
-}
-
-interface Alert {
-  id: string;
-  status: string;
-  rule: Rule;
-}
-
-interface Transaction {
-  id: string;
-  externalId: string;
-  date: string;
-  amount: number;
-  currency: string;
-  type: string;
-  sourceAccountKey?: string;
-  targetAccountKey?: string;
-  processedAt?: string;
-  alerts?: Alert[];
-}
-
 interface TransactionTableProps {
-  transactions: Transaction[];
+  transactions: TransactionType[];
   isLoading?: boolean;
 }
 
@@ -60,7 +36,7 @@ export default function TransactionTable({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
-  const columnHelper = createColumnHelper<Transaction>();
+  const columnHelper = createColumnHelper<TransactionType>();
 
   const columns = useMemo(
     () => [
@@ -81,20 +57,23 @@ export default function TransactionTable({
           return dateA < dateB ? -1 : dateA > dateB ? 1 : 0;
         },
       }),
-      columnHelper.accessor((row) => `${(row.amount / 100).toFixed(2)} ${row.currency}`, {
-        id: 'amount',
-        header: 'Amount',
-        cell: (info) => info.getValue(),
-        enableSorting: true,
-        enableColumnFilter: true,
-        sortingFn: (rowA, rowB, columnId) => {
-          return rowA.original.amount < rowB.original.amount
-            ? -1
-            : rowA.original.amount > rowB.original.amount
-            ? 1
-            : 0;
-        },
-      }),
+      columnHelper.accessor(
+        (row) => `${(row.amount / 100).toFixed(2)} ${row.currency}`,
+        {
+          id: 'amount',
+          header: 'Amount',
+          cell: (info) => info.getValue(),
+          enableSorting: true,
+          enableColumnFilter: true,
+          sortingFn: (rowA, rowB, columnId) => {
+            return rowA.original.amount < rowB.original.amount
+              ? -1
+              : rowA.original.amount > rowB.original.amount
+              ? 1
+              : 0;
+          },
+        }
+      ),
       columnHelper.accessor('type', {
         header: 'Type',
         cell: (info) => info.getValue(),

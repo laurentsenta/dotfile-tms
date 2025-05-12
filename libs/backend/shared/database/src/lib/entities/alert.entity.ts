@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base-entity';
 import { Rule } from './rule.entity';
 import { Transaction } from './transaction.entity';
@@ -16,7 +16,9 @@ export class Alert extends BaseEntity {
   @JoinColumn({ name: 'rule_id' })
   rule: Rule;
 
-  @ManyToOne(() => Transaction, (transaction) => transaction.alerts, { nullable: false })
+  @ManyToOne(() => Transaction, (transaction) => transaction.alerts, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'transaction_id' })
   transaction: Transaction;
 
@@ -24,7 +26,7 @@ export class Alert extends BaseEntity {
     type: 'enum',
     enum: AlertStatusEnum,
     default: AlertStatusEnum.NEW,
-    nullable: false
+    nullable: false,
   })
   status: AlertStatusEnum;
 

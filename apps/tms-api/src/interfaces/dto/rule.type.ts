@@ -1,7 +1,8 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { RuleType as RuleTypeShared } from '@dotfile-tms/interfaces';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class RuleType {
+export class RuleType implements RuleTypeShared {
   @Field(() => ID)
   id: string;
 

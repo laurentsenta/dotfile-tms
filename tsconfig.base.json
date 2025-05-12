@@ -18,7 +18,10 @@
     "baseUrl": ".",
     "paths": {
       "@dotfile-tms/database": ["libs/backend/shared/database/src/index.ts"],
-      "@dotfile-tms/migrations": ["libs/backend/shared/migrations/src/index.ts"]
+      "@dotfile-tms/migrations": [
+        "libs/backend/shared/migrations/src/index.ts"
+      ],
+      "@dotfile-tms/interfaces": ["libs/interfaces/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -1,5 +1,12 @@
+import {
+  AlertStatusEnum,
+  AlertType,
+  TransactionType,
+  TransactionTypeEnum
+} from '@dotfile-tms/interfaces';
 import axios from 'axios';
 
+// Keep GraphQLResponse as it's not in the shared types
 interface GraphQLResponse<T> {
   data: T;
   errors?: Array<{
@@ -7,41 +14,6 @@ interface GraphQLResponse<T> {
     locations: Array<{ line: number; column: number }>;
     path: string[];
   }>;
-}
-
-interface TransactionData {
-  id: string;
-  externalId: string;
-  date: string;
-  sourceAccountKey: string;
-  targetAccountKey: string;
-  amount: number;
-  currency: string;
-  type: string;
-  createdAt: string;
-  updatedAt: string;
-  processedAt: string;
-  alerts: AlertData[];
-}
-
-interface RuleData {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface AlertData {
-  id: string;
-  rule: RuleData;
-  transaction?: {
-    id: string;
-    externalId: string;
-  };
-  status: string;
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
 }
 
 const CENTS = 100;
@@ -56,9 +28,8 @@ describe('GraphQL API', () => {
     return response.data;
   }
 
-  // TODO: type our endpoints correctly
-  let normalTx: any;
-  let suspiciousTx: any;
+  let normalTx: TransactionType;
+  let suspiciousTx: TransactionType;
 
   // Create test transactions
   async function createTestTransactions() {
@@ -70,7 +41,7 @@ describe('GraphQL API', () => {
       targetAccountKey: 'target_account',
       amount: 100 * CENTS,
       currency: 'USD',
-      type: 'TRANSFER',
+      type: TransactionTypeEnum.TRANSFER,
     };
 
     // Create a suspicious transaction (high amount)
@@ -81,7 +52,7 @@ describe('GraphQL API', () => {
       targetAccountKey: 'target_account',
       amount: 15000 * CENTS,
       currency: 'USD',
-      type: 'TRANSFER',
+      type: TransactionTypeEnum.TRANSFER,
     };
 
     // Create the transactions using the REST API
@@ -116,7 +87,7 @@ describe('GraphQL API', () => {
       }
     `;
 
-    const response = await executeGraphQLQuery<{ transactions: TransactionData[] }>(query);
+    const response = await executeGraphQLQuery<{ transactions: TransactionType[] }>(query);
 
     // Verify the response
     expect(response.errors).toBeUndefined();
@@ -132,7 +103,7 @@ describe('GraphQL API', () => {
     expect(foundNormalTx?.externalId).toBe('graphql-test-normal');
     expect(foundNormalTx?.amount).toBe(100 * CENTS);
     expect(foundNormalTx?.currency).toBe('USD');
-    expect(foundNormalTx?.type).toBe('TRANSFER');
+    expect(foundNormalTx?.type).toBe(TransactionTypeEnum.TRANSFER);
     expect(foundNormalTx?.processedAt).toBeDefined();
 
     // Verify the suspicious transaction
@@ -140,7 +111,7 @@ describe('GraphQL API', () => {
     expect(foundSuspiciousTx?.externalId).toBe('graphql-test-suspicious');
     expect(foundSuspiciousTx?.amount).toBe(15000 * CENTS);
     expect(foundSuspiciousTx?.currency).toBe('USD');
-    expect(foundSuspiciousTx?.type).toBe('TRANSFER');
+    expect(foundSuspiciousTx?.type).toBe(TransactionTypeEnum.TRANSFER);
     expect(foundSuspiciousTx?.processedAt).toBeDefined();
   });
 
@@ -167,7 +138,7 @@ describe('GraphQL API', () => {
     `;
 
     const variables = { id: suspiciousTx.id };
-    const response = await executeGraphQLQuery<{ transaction: TransactionData }>(query, variables);
+    const response = await executeGraphQLQuery<{ transaction: TransactionType }>(query, variables);
 
     // Verify the response
     expect(response.errors).toBeUndefined();
@@ -181,7 +152,7 @@ describe('GraphQL API', () => {
     
     // Verify the alert
     const alert = response.data.transaction.alerts[0];
-    expect(alert.status).toBe('NEW');
+    expect(alert.status).toBe(AlertStatusEnum.NEW);
     expect(alert.rule.name).toBe('suspicious_activity');
   });
 
@@ -204,7 +175,7 @@ describe('GraphQL API', () => {
     `;
 
     const variables = { transactionId: suspiciousTx.id };
-    const response = await executeGraphQLQuery<{ alertsByTransaction: AlertData[] }>(query, variables);
+    const response = await executeGraphQLQuery<{ alertsByTransaction: AlertType[] }>(query, variables);
 
     // Verify the response
     expect(response.errors).toBeUndefined();
@@ -214,7 +185,7 @@ describe('GraphQL API', () => {
     
     // Verify the alert
     const alert = response.data.alertsByTransaction[0];
-    expect(alert.status).toBe('NEW');
+    expect(alert.status).toBe(AlertStatusEnum.NEW);
     expect(alert.rule.name).toBe('suspicious_activity');
     expect(alert.transaction.id).toBe(suspiciousTx.id);
     expect(alert.transaction.externalId).toBe('graphql-test-suspicious');
@@ -246,11 +217,11 @@ describe('GraphQL API', () => {
         targetAccountKey: 'target_account',
         amount: 200 * CENTS,
         currency: 'USD',
-        type: 'TRANSFER'
+        type: TransactionTypeEnum.TRANSFER
       }
     };
 
-    const response = await executeGraphQLQuery<{ createTransaction: TransactionData }>(mutation, variables);
+    const response = await executeGraphQLQuery<{ createTransaction: TransactionType }>(mutation, variables);
 
     // Verify the response
     expect(response.errors).toBeUndefined();
@@ -260,7 +231,7 @@ describe('GraphQL API', () => {
     expect(response.data.createTransaction.externalId).toBe('graphql-mutation-test');
     expect(response.data.createTransaction.amount).toBe(200 * CENTS);
     expect(response.data.createTransaction.currency).toBe('USD');
-    expect(response.data.createTransaction.type).toBe('TRANSFER');
+    expect(response.data.createTransaction.type).toBe(TransactionTypeEnum.TRANSFER);
     expect(response.data.createTransaction.processedAt).toBeDefined();
   });
 });
