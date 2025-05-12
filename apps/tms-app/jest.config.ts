@@ -7,4 +7,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/tms-app',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
 };
