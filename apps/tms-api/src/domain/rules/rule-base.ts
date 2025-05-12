@@ -1,5 +1,5 @@
 import { Transaction } from '@dotfile-tms/database';
-import { AccountHistory } from '../../data/accounthistory.entity';
+import { AccountHistoryRepository } from '../../data/accounthistory.repository';
 import { RiskAccounts } from '../../data/risk-accounts.entity';
 import { RuleEvalResult } from '../../data/rule-eval-result.entity';
 
@@ -9,7 +9,7 @@ export type EvaluateRule = ({
   riskAccounts,
 }: {
   transaction: Transaction;
-  history: AccountHistory;
+  history: AccountHistoryRepository;
   riskAccounts: RiskAccounts;
 }) => Promise<RuleEvalResult>;
 

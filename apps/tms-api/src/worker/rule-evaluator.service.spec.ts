@@ -1,16 +1,16 @@
 import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccountHistory } from '../data/accounthistory.entity';
-import { MockAccountHistory } from '../data/accounthistory.mock';
+import { AccountHistoryRepository } from '../data/accounthistory.repository';
+import { AccountHistoryRepositoryMock } from '../data/accounthistory.repository.mock';
 import { AlertAggregateService } from '../data/alert-aggregate.service';
-import { MockRiskAccounts } from '../data/risk-accounts.mock';
 import { RiskAccounts } from '../data/risk-accounts.entity';
-import { RuleEvaluatorService } from './rule-evaluator.service';
+import { MockRiskAccounts } from '../data/risk-accounts.mock';
 import { evalRules } from '../domain/rules-evaluator';
 import { dormantAccountActivity } from '../domain/rules/dormant-account-activity';
 import { highRiskMerchants } from '../domain/rules/high-risk-merchants';
 import { highVelocityTransactions } from '../domain/rules/high-velocity-transactions';
 import { suspiciousActivity } from '../domain/rules/suspicious-activity';
+import { RuleEvaluatorService } from './rule-evaluator.service';
 
 // Mock the evalRules function
 jest.mock('../domain/rules-evaluator');
@@ -18,12 +18,12 @@ jest.mock('../domain/rules-evaluator');
 describe('RuleEvaluatorService', () => {
   let service: RuleEvaluatorService;
   let alertService: AlertAggregateService;
-  let accountHistoryService: MockAccountHistory;
-  let riskAccountsService: MockRiskAccounts;
+  let accountHistoryMock: AccountHistoryRepositoryMock;
+  let riskAccountsMock: MockRiskAccounts;
 
   beforeEach(async () => {
-    accountHistoryService = new MockAccountHistory();
-    riskAccountsService = new MockRiskAccounts([
+    accountHistoryMock = new AccountHistoryRepositoryMock();
+    riskAccountsMock = new MockRiskAccounts([
       'risk-account-1',
       'risk-account-2',
     ]);
@@ -46,12 +46,12 @@ describe('RuleEvaluatorService', () => {
           useValue: mockAlertAggregateService,
         },
         {
-          provide: AccountHistory,
-          useValue: accountHistoryService,
+          provide: AccountHistoryRepository,
+          useValue: accountHistoryMock,
         },
         {
           provide: RiskAccounts,
-          useValue: riskAccountsService,
+          useValue: riskAccountsMock,
         },
       ],
     }).compile();
@@ -119,8 +119,8 @@ describe('RuleEvaluatorService', () => {
       // Verify evalRules was called with the correct parameters
       expect(evalRules).toHaveBeenCalledWith(
         transaction,
-        accountHistoryService,
-        riskAccountsService
+        accountHistoryMock,
+        riskAccountsMock
       );
 
       // Verify the results array contains all rule results

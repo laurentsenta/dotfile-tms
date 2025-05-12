@@ -1,5 +1,5 @@
 // Note: using an abstract class, to work around the need to move arounds "symbols" linking to interfaces
-export abstract class AccountHistory {
+export abstract class AccountHistoryRepository {
   abstract incDailyTx(
     account: string,
     date: Date,

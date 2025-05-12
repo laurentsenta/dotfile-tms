@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
-import { AccountHistoryRedisService } from './accounthistory.service';
+import { AccountHistoryRepositoryRedis } from './accounthistory.repository.impl';
 import { addDays, toDate } from 'date-fns';
 
 let accountId = 0;
@@ -20,7 +20,7 @@ const getDay = (str: string = undefined): Date => {
 };
 
 describe('AccountHistoryRedisService', () => {
-  let service: AccountHistoryRedisService;
+  let service: AccountHistoryRepositoryRedis;
   let redis: Redis;
   const keyPrefix = `test:${new Date().toISOString().replace(/[:.]/g, '-')}:`;
 
@@ -44,7 +44,7 @@ describe('AccountHistoryRedisService', () => {
     // Create a custom provider for the test
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        AccountHistoryRedisService,
+        AccountHistoryRepositoryRedis,
         {
           provide: ConfigService,
           useValue: mockConfigService,
@@ -52,8 +52,8 @@ describe('AccountHistoryRedisService', () => {
       ],
     }).compile();
 
-    service = module.get<AccountHistoryRedisService>(
-      AccountHistoryRedisService
+    service = module.get<AccountHistoryRepositoryRedis>(
+      AccountHistoryRepositoryRedis
     );
 
     // Override the service's Redis client with our prefixed one

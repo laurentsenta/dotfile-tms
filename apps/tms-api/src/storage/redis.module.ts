@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AccountHistory } from '../data/accounthistory.entity';
-import { AccountHistoryRedisService } from '../data/accounthistory.service';
+import { AccountHistoryRepository } from '../data/accounthistory.repository';
+import { AccountHistoryRepositoryRedis } from '../data/accounthistory.repository.impl';
 import { RiskAccounts } from '../data/risk-accounts.entity';
 import { RiskAccountsService } from '../data/risk-accounts.service';
 
@@ -9,14 +9,14 @@ import { RiskAccountsService } from '../data/risk-accounts.service';
   imports: [ConfigModule],
   providers: [
     {
-      provide: AccountHistory,
-      useClass: AccountHistoryRedisService,
+      provide: AccountHistoryRepository,
+      useClass: AccountHistoryRepositoryRedis,
     },
     {
       provide: RiskAccounts,
       useClass: RiskAccountsService,
     },
   ],
-  exports: [AccountHistory, RiskAccounts],
+  exports: [AccountHistoryRepository, RiskAccounts],
 })
 export class RedisModule {}

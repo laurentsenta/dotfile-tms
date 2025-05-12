@@ -1,5 +1,5 @@
 import { Transaction } from '@dotfile-tms/database';
-import { AccountHistory } from '../data/accounthistory.entity';
+import { AccountHistoryRepository } from '../data/accounthistory.repository';
 import { RiskAccounts } from '../data/risk-accounts.entity';
 import { RuleEvalResult } from '../data/rule-eval-result.entity';
 import { dormantAccountActivity } from './rules/dormant-account-activity';
@@ -17,7 +17,7 @@ export const DEFAULT_RULES: RuleBase[] = [
 
 export const evalRules = async (
   transaction: Transaction,
-  history: AccountHistory,
+  history: AccountHistoryRepository,
   riskAccounts: RiskAccounts
 ): Promise<RuleEvalResult[]> => {
   const results: RuleEvalResult[] = await Promise.all(

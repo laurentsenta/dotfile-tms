@@ -2,13 +2,13 @@ import { OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { differenceInMinutes, format } from 'date-fns';
 import Redis from 'ioredis';
-import { AccountHistory } from './accounthistory.entity';
+import { AccountHistoryRepository } from './accounthistory.repository';
 
 const REDIS_HOST = 'localhost'; // TODO: use env variables
 const REDIS_PORT = 6379; // TODO: use env variables
 
-export class AccountHistoryRedisService
-  implements OnModuleDestroy, AccountHistory
+export class AccountHistoryRepositoryRedis
+  implements OnModuleDestroy, AccountHistoryRepository
 {
   private readonly redisClient: Redis;
 

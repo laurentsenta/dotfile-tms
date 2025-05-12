@@ -1,10 +1,10 @@
 import { differenceInMinutes, format, formatISO } from 'date-fns';
-import { AccountHistory } from './accounthistory.entity';
+import { AccountHistoryRepository } from './accounthistory.repository';
 
 /**
  * In-memory implementation of AccountHistory for testing
  */
-export class MockAccountHistory implements AccountHistory {
+export class AccountHistoryRepositoryMock implements AccountHistoryRepository {
   private storage: Map<string, number> = new Map();
   private dateStorage: Map<string, string> = new Map();
   private dormantFlags: Map<string, boolean> = new Map();
