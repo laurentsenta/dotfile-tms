@@ -7,7 +7,7 @@ import { CreateTransactionDto } from '../interfaces/dto/create-transaction.dto';
 const UNIQUE_CONSTRAINT_VIOLATION_CODE = '23505';
 
 @Injectable()
-export class TransactionAggregateService {
+export class TransactionAggregate {
   constructor(
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>

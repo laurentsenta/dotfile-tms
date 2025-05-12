@@ -7,10 +7,10 @@ import {
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { AlertAggregateService } from './alert-aggregate.service';
+import { AlertAggregate } from './alert.aggregate';
 
 describe('AlertAggregateService', () => {
-  let service: AlertAggregateService;
+  let service: AlertAggregate;
   let mockTransactionRepository: any;
   let mockRuleRepository: any;
   let mockAlertRepository: any;
@@ -48,7 +48,7 @@ describe('AlertAggregateService', () => {
 
     const app = await Test.createTestingModule({
       providers: [
-        AlertAggregateService,
+        AlertAggregate,
         {
           provide: getRepositoryToken(Transaction),
           useValue: mockTransactionRepository,
@@ -64,7 +64,7 @@ describe('AlertAggregateService', () => {
       ],
     }).compile();
 
-    service = app.get<AlertAggregateService>(AlertAggregateService);
+    service = app.get<AlertAggregate>(AlertAggregate);
   });
 
   describe('listAllAlerts', () => {

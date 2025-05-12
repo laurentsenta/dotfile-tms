@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AlertAggregateService } from '../../data/alert-aggregate.service';
+import { AlertAggregate } from '../../data/alert.aggregate';
 import { AlertsController } from './alerts.controller';
 
 describe('AlertsController', () => {
   let alertsController: AlertsController;
-  let alertService: AlertAggregateService;
+  let alertService: AlertAggregate;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AlertsController],
       providers: [
         {
-          provide: AlertAggregateService,
+          provide: AlertAggregate,
           useValue: {
             listAllAlerts: jest.fn().mockResolvedValue([]),
             getAlertsByTransactionId: jest.fn().mockResolvedValue([]),
@@ -22,7 +22,7 @@ describe('AlertsController', () => {
     }).compile();
 
     alertsController = module.get<AlertsController>(AlertsController);
-    alertService = module.get<AlertAggregateService>(AlertAggregateService);
+    alertService = module.get<AlertAggregate>(AlertAggregate);
   });
 
   describe('listAll', () => {

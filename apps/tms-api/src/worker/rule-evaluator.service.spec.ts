@@ -2,7 +2,7 @@ import { Transaction, TransactionTypeEnum } from '@dotfile-tms/database';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AccountHistoryRepository } from '../data/accounthistory.repository';
 import { AccountHistoryRepositoryMock } from '../data/accounthistory.repository.mock';
-import { AlertAggregateService } from '../data/alert-aggregate.service';
+import { AlertAggregate } from '../data/alert.aggregate';
 import { RiskAccountsRepository } from '../data/risk-accounts.repository';
 import { RiskAccountsRepositoryMock } from '../data/risk-accounts.repository.mock';
 import { evalRules } from '../domain/rules-evaluator';
@@ -17,7 +17,7 @@ jest.mock('../domain/rules-evaluator');
 
 describe('RuleEvaluatorService', () => {
   let service: RuleEvaluatorService;
-  let alertService: AlertAggregateService;
+  let alertService: AlertAggregate;
   let accountHistoryMock: AccountHistoryRepositoryMock;
   let riskAccountsMock: RiskAccountsRepositoryMock;
 
@@ -42,7 +42,7 @@ describe('RuleEvaluatorService', () => {
       providers: [
         RuleEvaluatorService,
         {
-          provide: AlertAggregateService,
+          provide: AlertAggregate,
           useValue: mockAlertAggregateService,
         },
         {
@@ -57,7 +57,7 @@ describe('RuleEvaluatorService', () => {
     }).compile();
 
     service = module.get<RuleEvaluatorService>(RuleEvaluatorService);
-    alertService = module.get<AlertAggregateService>(AlertAggregateService);
+    alertService = module.get<AlertAggregate>(AlertAggregate);
   });
 
   it('should be defined', () => {

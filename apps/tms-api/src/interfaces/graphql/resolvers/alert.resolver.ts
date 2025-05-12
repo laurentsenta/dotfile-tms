@@ -7,9 +7,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AlertAggregateService } from '../../../data/alert-aggregate.service';
+import { AlertAggregate } from '../../../data/alert.aggregate';
 import { RulesAggregateService } from '../../../data/rules-aggregate.service';
-import { TransactionAggregateService } from '../../../data/transaction-aggregate.service';
+import { TransactionAggregate } from '../../../data/transaction.aggregate';
 import { AlertType } from '../types/alert.type';
 import { RuleType } from '../types/rule.type';
 import { TransactionType } from '../types/transaction.type';
@@ -17,8 +17,8 @@ import { TransactionType } from '../types/transaction.type';
 @Resolver(() => AlertType)
 export class AlertResolver {
   constructor(
-    private readonly alertService: AlertAggregateService,
-    private readonly transactions: TransactionAggregateService,
+    private readonly alertService: AlertAggregate,
+    private readonly transactions: TransactionAggregate,
     private readonly ruleEvaluatorService: RulesAggregateService
   ) {}
 

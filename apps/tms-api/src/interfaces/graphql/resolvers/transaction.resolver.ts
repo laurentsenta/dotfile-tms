@@ -8,8 +8,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AlertAggregateService } from '../../../data/alert-aggregate.service';
-import { TransactionAggregateService } from '../../../data/transaction-aggregate.service';
+import { AlertAggregate } from '../../../data/alert.aggregate';
+import { TransactionAggregate } from '../../../data/transaction.aggregate';
 import { TransactionQueueService } from '../../../worker/transaction-queue.service';
 import { CreateTransactionDto } from '../../dto/create-transaction.dto';
 import { AlertType } from '../types/alert.type';
@@ -19,8 +19,8 @@ import { TransactionType } from '../types/transaction.type';
 @Resolver(() => TransactionType)
 export class TransactionResolver {
   constructor(
-    private readonly txs: TransactionAggregateService,
-    private readonly alertService: AlertAggregateService,
+    private readonly txs: TransactionAggregate,
+    private readonly alertService: AlertAggregate,
     private readonly queue: TransactionQueueService
   ) {}
 

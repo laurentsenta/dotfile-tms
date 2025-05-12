@@ -6,10 +6,10 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { CreateTransactionDto } from '../interfaces/dto/create-transaction.dto';
 import { RuleEvaluatorService } from '../worker/rule-evaluator.service';
 import { TransactionQueueService } from '../worker/transaction-queue.service';
-import { TransactionAggregateService } from './transaction-aggregate.service';
+import { TransactionAggregate } from './transaction.aggregate';
 
 describe('TransactionAggregateService', () => {
-  let service: TransactionAggregateService;
+  let service: TransactionAggregate;
   let mockTransactionRepository: any;
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('TransactionAggregateService', () => {
 
     const app = await Test.createTestingModule({
       providers: [
-        TransactionAggregateService,
+        TransactionAggregate,
         {
           provide: getRepositoryToken(Transaction),
           useValue: mockTransactionRepository,
@@ -52,7 +52,7 @@ describe('TransactionAggregateService', () => {
       ],
     }).compile();
 
-    service = app.get<TransactionAggregateService>(TransactionAggregateService);
+    service = app.get<TransactionAggregate>(TransactionAggregate);
   });
 
   describe('listAllTransactions', () => {

@@ -1,10 +1,10 @@
 import { Alert } from '@dotfile-tms/database';
 import { Controller, Get, HttpCode, HttpStatus, Param } from '@nestjs/common';
-import { AlertAggregateService } from '../../data/alert-aggregate.service';
+import { AlertAggregate } from '../../data/alert.aggregate';
 
 @Controller('/v1/alerts')
 export class AlertsController {
-  constructor(private readonly alertService: AlertAggregateService) {}
+  constructor(private readonly alertService: AlertAggregate) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionsController } from './transactions.controller';
-import { TransactionAggregateService } from '../../data/transaction-aggregate.service';
+import { TransactionAggregate } from '../../data/transaction.aggregate';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Transaction, Rule, Alert } from '@dotfile-tms/database';
 import { RulesAggregateService } from '../../data/rules-aggregate.service';
@@ -8,13 +8,13 @@ import { TransactionQueueService } from '../../worker/transaction-queue.service'
 
 describe('TransactionsController', () => {
   let transactionsController: TransactionsController;
-  let transactionService: TransactionAggregateService;
+  let transactionService: TransactionAggregate;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TransactionsController],
       providers: [
-        TransactionAggregateService,
+        TransactionAggregate,
         {
           provide: getRepositoryToken(Transaction),
           useValue: {
@@ -59,7 +59,7 @@ describe('TransactionsController', () => {
     }).compile();
 
     transactionsController = module.get<TransactionsController>(TransactionsController);
-    transactionService = module.get<TransactionAggregateService>(TransactionAggregateService);
+    transactionService = module.get<TransactionAggregate>(TransactionAggregate);
   });
 
   describe('listAll', () => {

@@ -7,14 +7,14 @@ import {
   HttpStatus,
   Post,
 } from '@nestjs/common';
-import { TransactionAggregateService } from '../../data/transaction-aggregate.service';
+import { TransactionAggregate } from '../../data/transaction.aggregate';
 import { CreateTransactionDto } from '../dto/create-transaction.dto';
 import { TransactionQueueService } from '../../worker/transaction-queue.service';
 
 @Controller('/v1/transactions')
 export class TransactionsController {
   constructor(
-    private readonly transactions: TransactionAggregateService,
+    private readonly transactions: TransactionAggregate,
     private readonly queue: TransactionQueueService
   ) {}
 

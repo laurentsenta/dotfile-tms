@@ -8,9 +8,9 @@ import {
 } from '@dotfile-tms/database';
 import { migrations } from '@dotfile-tms/migrations';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AlertAggregateService } from '../data/alert-aggregate.service';
+import { AlertAggregate } from '../data/alert.aggregate';
 import { RulesAggregateService } from '../data/rules-aggregate.service';
-import { TransactionAggregateService } from '../data/transaction-aggregate.service';
+import { TransactionAggregate } from '../data/transaction.aggregate';
 
 // @NOTE migrations will run at this API startup
 @Module({
@@ -19,14 +19,14 @@ import { TransactionAggregateService } from '../data/transaction-aggregate.servi
     TypeOrmModule.forFeature([Transaction, Rule, Alert]),
   ],
   providers: [
-    TransactionAggregateService,
+    TransactionAggregate,
     RulesAggregateService,
-    AlertAggregateService,
+    AlertAggregate,
   ],
   exports: [
-    TransactionAggregateService,
+    TransactionAggregate,
     RulesAggregateService,
-    AlertAggregateService,
+    AlertAggregate,
   ],
 })
 export class ApiDatabaseModule {}

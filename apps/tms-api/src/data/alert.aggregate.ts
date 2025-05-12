@@ -12,7 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class AlertAggregateService {
+export class AlertAggregate {
   constructor(
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
